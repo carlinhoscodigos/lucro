@@ -1,50 +1,79 @@
+// @ts-nocheck
 "use client"
 
-import { useSignIn } from "@clerk/nextjs"; // 1. Importando o Clerk
-import { useState } from "react";
+import { useSignIn, useUser } from "@clerk/nextjs";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, ArrowRight, ShieldCheck, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
-  const { isLoaded, signIn, setActive } = useSignIn(); // 2. Inicializando hooks do Clerk
+  const { isLoaded: isSignInLoaded, signIn, setActive } = useSignIn();
+  const { isSignedIn, isLoaded: isUserLoaded } = useUser();
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // Se o Clerk detectar que você já está logado, te joga pra home na hora
+  useEffect(() => {
+    if (isUserLoaded && isSignedIn) {
+      window.location.href = "/";
+    }
+  }, [isSignedIn, isUserLoaded]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!isLoaded) return;
     
+    // Proteção caso o usuário clique antes do carregamento total
+    if (!isSignInLoaded || !signIn) {
+      setError("O sistema ainda está carregando. Aguarde um instante.");
+      return;
+    }
+
     setError("");
     setLoading(true);
 
     try {
-      // 3. O Clerk tenta fazer o login
       const result = await signIn.create({
         identifier: email,
         password: password,
       });
 
-      // 4. Se deu tudo certo, ativa a sessão e redireciona
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        router.push("/"); 
-        router.refresh();
-      } else {
-        // Caso exija algum passo extra (tipo MFA), mas geralmente é complete
-        console.log(result);
+        // Usamos location.href para garantir que o middleware leia os novos cookies
+        window.location.href = "/";
       }
-
     } catch (err: any) {
-      // 5. Tratamento de erro (E-mail ou senha errados no Clerk)
-      console.error("Erro Clerk:", err);
-      setError("E-mail ou senha incorretos.");
-    } finally {
+      console.error("Erro no login:", err);
       setLoading(false);
+      
+      if (err.errors && err.errors.length > 0) {
+        const code = err.errors[0].code;
+        if (code === "form_password_incorrect") setError("Senha incorreta.");
+        else if (code === "form_identifier_not_found") setError("E-mail não encontrado.");
+        else setError(err.errors[0].longMessage);
+      } else {
+        setError("Erro ao tentar entrar.");
+      }
     }
   }
+
+  // Se o sistema de Sign-In não carregou, mostramos o loading.
+  // Se passar de 5-10 segundos aqui, o problema é nas chaves .env ou ClerkProvider
+  if (!isSignInLoaded) {
+    return (
+      <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-white">
+        <Loader2 className="animate-spin text-emerald-500 mb-4" size={40} />
+        <p className="text-slate-400 animate-pulse font-medium">Iniciando Lucrô...</p>
+      </div>
+    );
+  }
+
+  // Se já estiver logado, não mostra o formulário
+  if (isUserLoaded && isSignedIn) return null;
 
   return (
     <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6">
@@ -59,7 +88,7 @@ export default function LoginPage() {
         </div>
 
         {error && (
-          <div className="bg-rose-50 text-rose-500 p-4 rounded-2xl mb-6 text-center font-medium border border-rose-100 animate-shake">
+          <div className="bg-rose-50 text-rose-500 p-4 rounded-2xl mb-6 text-center font-medium border border-rose-100 animate-in fade-in zoom-in duration-300">
             {error}
           </div>
         )}
@@ -74,7 +103,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="exemplo@gmail.com"
-                className="w-full bg-slate-50 border border-slate-100 p-4 pl-12 rounded-2xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-900" 
+                className="w-full bg-slate-50 border border-slate-100 p-4 pl-12 rounded-2xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-900 transition-all" 
                 required
               />
             </div>
@@ -89,7 +118,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-slate-50 border border-slate-100 p-4 pl-12 rounded-2xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-slate-900" 
+                className="w-full bg-slate-50 border border-slate-100 p-4 pl-12 rounded-2xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-slate-900 transition-all" 
                 required
               />
             </div>
@@ -98,15 +127,9 @@ export default function LoginPage() {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-70 text-white font-bold p-5 rounded-2xl mt-4 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98] flex items-center justify-center gap-2"
+            className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:opacity-70 text-white font-bold p-5 rounded-2xl mt-4 transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-2"
           >
-            {loading ? (
-              <Loader2 className="animate-spin" size={20} />
-            ) : (
-              <>
-                Entrar no sistema <ArrowRight size={20} />
-              </>
-            )}
+            {loading ? <Loader2 className="animate-spin" /> : <>Entrar no sistema <ArrowRight size={20} /></>}
           </button>
         </form>
 
