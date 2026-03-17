@@ -9,26 +9,25 @@ import { Mail, Lock, ArrowRight, ShieldCheck, Loader2 } from "lucide-react";
 export default function LoginPage() {
   const { isLoaded: isSignInLoaded, signIn, setActive } = useSignIn();
   const { isSignedIn, isLoaded: isUserLoaded } = useUser();
-  
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // Se o Clerk detectar que você já está logado, te joga pra home na hora
+  // Se já estiver logado, manda pra home
   useEffect(() => {
     if (isUserLoaded && isSignedIn) {
-      window.location.href = "/";
+      router.replace("/");
     }
-  }, [isSignedIn, isUserLoaded]);
+  }, [isSignedIn, isUserLoaded, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    
-    // Proteção caso o usuário clique antes do carregamento total
-    if (!isSignInLoaded || !signIn) {
-      setError("O sistema ainda está carregando. Aguarde um instante.");
+
+    if (!signIn) {
+      setError("O sistema de login ainda está iniciando. Tente novamente em instantes.");
       return;
     }
 
@@ -41,35 +40,52 @@ export default function LoginPage() {
         password: password,
       });
 
-      if (result.status === "complete") {
+      // Fluxo feliz: sessão criada -> ativa e redireciona
+      if (result && result.status === "complete" && result.createdSessionId) {
         await setActive({ session: result.createdSessionId });
-        // Usamos location.href para garantir que o middleware leia os novos cookies
         window.location.href = "/";
+        return;
       }
+
+      // Qualquer outro status é considerado falha de login
+      console.warn("Status de login inesperado:", result?.status, result);
+      setError("Não foi possível entrar. Verifique e-mail e senha.");
+      setLoading(false);
+      return;
     } catch (err: any) {
       console.error("Erro no login:", err);
-      setLoading(false);
-      
-      if (err.errors && err.errors.length > 0) {
-        const code = err.errors[0].code;
-        if (code === "form_password_incorrect") setError("Senha incorreta.");
-        else if (code === "form_identifier_not_found") setError("E-mail não encontrado.");
-        else setError(err.errors[0].longMessage);
-      } else {
-        setError("Erro ao tentar entrar.");
-      }
-    }
-  }
 
-  // Se o sistema de Sign-In não carregou, mostramos o loading.
-  // Se passar de 5-10 segundos aqui, o problema é nas chaves .env ou ClerkProvider
-  if (!isSignInLoaded) {
-    return (
-      <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-white">
-        <Loader2 className="animate-spin text-emerald-500 mb-4" size={40} />
-        <p className="text-slate-400 animate-pulse font-medium">Iniciando Lucrô...</p>
-      </div>
-    );
+      const firstError = err?.errors?.[0];
+      if (firstError) {
+        const code = firstError.code;
+        const msg = (firstError.longMessage || firstError.message || "").toLowerCase();
+
+        // Senha / e‑mail realmente incorretos -> mostramos erro e NÃO redirecionamos
+        if (code === "form_password_incorrect") {
+          setError("Senha incorreta.");
+          setLoading(false);
+          return;
+        }
+
+        if (code === "form_identifier_not_found") {
+          setError("E-mail não encontrado.");
+          setLoading(false);
+          return;
+        }
+
+        // Já logado ou sessão existente -> apenas informação, sem recarregar aqui.
+        if (code === "session_exists" || msg.includes("already signed in")) {
+          setError("");
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Qualquer outro erro desconhecido: mostra mensagem genérica
+      // e NÃO recarrega a página.
+      setError("Erro ao tentar entrar. Tente novamente.");
+      setLoading(false);
+    }
   }
 
   // Se já estiver logado, não mostra o formulário
