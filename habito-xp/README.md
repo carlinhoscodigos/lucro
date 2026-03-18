@@ -12,6 +12,8 @@ Registo de pedidos e tarefas. Cada item fica com um check-in: quando for feito, 
 - [x] Criar .env com DATABASE_URL (Neon), PORT, JWT_SECRET e tabelas users, accounts, categories, transactions
 - [x] Configurar CORS com localhost:5173, lucro.onrender.com e credentials: true
 - [x] Corrigir URL da API: VITE_API_URL=https://lucro.onrender.com (sem https duplicado)
+- [x] Schema completo: users, accounts, categories, recurring_transactions, transactions, budgets, goals, notifications, subscriptions, transaction_imports, shared_access, audit_logs
+- [x] Tela de login (Lucrô.) sem "Acesso restrito aos administradores"
 
 ---
 
@@ -21,6 +23,6 @@ Registo de pedidos e tarefas. Cada item fica com um check-in: quando for feito, 
 
 ## Base de dados (Neon Postgres)
 
-Tabelas: **users**, **accounts**, **categories**, **transactions**.
+Tabelas: **users**, **accounts**, **categories**, **recurring_transactions**, **transactions**, **budgets**, **goals**, **notifications**, **subscriptions**, **transaction_imports**, **shared_access**, **audit_logs**.
 
 Para criar as tabelas no Postgres: `cd backend` e `npm run migrate`.
