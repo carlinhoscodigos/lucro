@@ -14,14 +14,28 @@ import reportsRoutes from './routes/reports.routes.js';
 
 const app = express();
 
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://lucro-theta.vercel.app',
-    'https://lucro.onrender.com',
-  ],
-  credentials: true,
-}));
+const allowedOrigins = new Set([
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'https://lucro-theta.vercel.app',
+]);
+
+const corsOptions = {
+  origin(origin, callback) {
+    // Permite requests server-to-server / curl (sem origin)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.has(origin)) return callback(null, true);
+    return callback(new Error(`CORS bloqueado para origem: ${origin}`));
+  },
+  methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false, // usamos Bearer token (não cookies)
+  maxAge: 86400,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 

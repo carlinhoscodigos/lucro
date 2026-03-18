@@ -18,7 +18,11 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
   if (!API_URL) throw new Error('VITE_API_URL não definido');
 
   const headers = new Headers(init.headers);
-  headers.set('Content-Type', 'application/json');
+  // Evita preflight desnecessário em GET/requests sem body.
+  // Só define Content-Type quando realmente vamos enviar JSON.
+  if (init.body !== undefined && init.body !== null && !(init.body instanceof FormData)) {
+    if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  }
 
   const token = getToken();
   if (token) headers.set('Authorization', `Bearer ${token}`);
