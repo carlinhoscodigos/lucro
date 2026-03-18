@@ -62,39 +62,87 @@ export function AccountsPage() {
 
       <Card className="overflow-hidden">
         {accounts.length ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-slate-50 text-slate-600 text-xs font-bold">
-                <tr>
-                  <th className="text-left px-5 py-3">Nome</th>
-                  <th className="text-left px-5 py-3">Tipo</th>
-                  <th className="text-left px-5 py-3">Saldo inicial</th>
-                  <th className="text-left px-5 py-3">Status</th>
-                  <th className="px-5 py-3" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {accounts.map((a) => (
-                  <tr key={a.id} className="hover:bg-slate-50/60">
-                    <td className="px-5 py-4 text-sm font-black text-slate-900">{a.name}</td>
-                    <td className="px-5 py-4 text-sm font-semibold text-slate-700">{accountTypeLabel(a.type)}</td>
-                    <td className="px-5 py-4 text-sm font-semibold text-slate-700">{formatMoney(a.initial_balance)}</td>
-                    <td className="px-5 py-4 text-sm font-semibold text-slate-700">{a.is_active ? 'ativa' : 'inativa'}</td>
-                    <td className="px-5 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="secondary" size="sm" onClick={() => { setEditing(a); setOpen(true); }}>
-                          Editar
-                        </Button>
-                        <Button variant="danger" size="sm" onClick={() => del.mutate(a.id)} disabled={del.isPending}>
-                          Excluir
-                        </Button>
-                      </div>
-                    </td>
+          <>
+            {/* Desktop */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-slate-50 text-slate-600 text-xs font-bold">
+                  <tr>
+                    <th className="text-left px-5 py-3">Nome</th>
+                    <th className="text-left px-5 py-3">Tipo</th>
+                    <th className="text-left px-5 py-3">Saldo inicial</th>
+                    <th className="text-left px-5 py-3">Status</th>
+                    <th className="px-5 py-3" />
                   </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {accounts.map((a) => (
+                    <tr key={a.id} className="hover:bg-slate-50/60">
+                      <td className="px-5 py-4 text-sm font-black text-slate-900">{a.name}</td>
+                      <td className="px-5 py-4 text-sm font-semibold text-slate-700">{accountTypeLabel(a.type)}</td>
+                      <td className="px-5 py-4 text-sm font-semibold text-slate-700">{formatMoney(a.initial_balance)}</td>
+                      <td className="px-5 py-4 text-sm font-semibold text-slate-700">{a.is_active ? 'ativa' : 'inativa'}</td>
+                      <td className="px-5 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="secondary" size="sm" onClick={() => { setEditing(a); setOpen(true); }}>
+                            Editar
+                          </Button>
+                          <Button variant="danger" size="sm" onClick={() => del.mutate(a.id)} disabled={del.isPending}>
+                            Excluir
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile (cards centralizados) */}
+            <div className="md:hidden">
+              <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
+                <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-center text-[11px] font-bold text-slate-600">
+                  <div>Nome</div>
+                  <div>Saldo inicial</div>
+                  <div>Tipo</div>
+                  <div>Status</div>
+                </div>
+              </div>
+              <div className="divide-y divide-slate-100">
+                {accounts.map((a) => (
+                  <div key={a.id} className="px-4 py-4">
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-center">
+                      <div className="min-w-0">
+                        <div className="text-[11px] font-bold text-slate-500">Nome</div>
+                        <div className="text-sm font-black text-slate-900 break-words">{a.name}</div>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[11px] font-bold text-slate-500">Saldo inicial</div>
+                        <div className="text-sm font-semibold text-slate-700">{formatMoney(a.initial_balance)}</div>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[11px] font-bold text-slate-500">Tipo</div>
+                        <div className="text-sm font-semibold text-slate-700">{accountTypeLabel(a.type)}</div>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[11px] font-bold text-slate-500">Status</div>
+                        <div className="text-sm font-semibold text-slate-700">{a.is_active ? 'ativa' : 'inativa'}</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                      <Button variant="secondary" size="sm" onClick={() => { setEditing(a); setOpen(true); }}>
+                        Editar
+                      </Button>
+                      <Button variant="danger" size="sm" onClick={() => del.mutate(a.id)} disabled={del.isPending}>
+                        Excluir
+                      </Button>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            </div>
+          </>
         ) : (
           <div className="p-6">
             <EmptyState title="Nenhuma conta ainda" description="Crie uma conta para começar a registrar lançamentos." action={<Button onClick={() => setOpen(true)}>Criar conta</Button>} />

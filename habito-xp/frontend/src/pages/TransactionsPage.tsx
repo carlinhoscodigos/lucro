@@ -24,7 +24,7 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500"
+      className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 appearance-none py-0 leading-none"
     />
   );
 }
@@ -233,41 +233,35 @@ export function TransactionsPage() {
             {/* Mobile (RTL + wrap) */}
             <div className="md:hidden">
               <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
-                <div className="flex flex-row-reverse flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] font-bold text-slate-600">
-                  <div className="min-w-[110px] text-center">Data</div>
-                  <div className="min-w-[150px] text-center">Descrição</div>
-                  <div className="min-w-[120px] text-center">Conta</div>
-                  <div className="min-w-[120px] text-center">Categoria</div>
-                  <div className="min-w-[110px] text-center">Status</div>
-                  <div className="min-w-[110px] text-center">Valor</div>
+                {/* Cabeçalho 2 colunas (esq: descrição/categoria | dir: data/conta) */}
+                <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-center text-[11px] font-bold text-slate-600">
+                  <div>Descrição</div>
+                  <div>Data</div>
+                  <div>Categoria</div>
+                  <div>Conta</div>
+                  <div>Valor</div>
+                  <div>Status</div>
                 </div>
               </div>
 
               <div className="divide-y divide-slate-100">
                 {data.transactions.map((t) => (
                   <div key={t.id} className="px-4 py-4">
-                    <div className="flex flex-row-reverse flex-wrap items-center justify-center gap-x-4 gap-y-2">
-                      <div className="min-w-[110px] text-center">
-                        <div className="text-[11px] font-bold text-slate-500">Data</div>
-                        <div className="text-sm font-semibold text-slate-700">{formatDateISO(t.transaction_date)}</div>
-                      </div>
-                      <div className="min-w-[150px] text-center">
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-center">
+                      <div>
                         <div className="text-[11px] font-bold text-slate-500">Descrição</div>
                         <div className="text-sm font-semibold text-slate-900 break-words">{t.description || 'Sem descrição'}</div>
-                      </div>
-                      <div className="min-w-[120px] text-center">
-                        <div className="text-[11px] font-bold text-slate-500">Conta</div>
-                        <div className="text-sm font-semibold text-slate-700">{t.account_name || t.account_id}</div>
-                      </div>
-                      <div className="min-w-[120px] text-center">
-                        <div className="text-[11px] font-bold text-slate-500">Categoria</div>
+                        <div className="mt-1 text-[11px] font-bold text-slate-500">Categoria</div>
                         <div className="text-sm font-semibold text-slate-700">{t.category_name || '—'}</div>
                       </div>
-                      <div className="min-w-[110px] text-center">
-                        <div className="text-[11px] font-bold text-slate-500">Status</div>
-                        <div className="text-sm font-semibold text-slate-700">{statusLabel(t.status)}</div>
+                      <div>
+                        <div className="text-[11px] font-bold text-slate-500">Data</div>
+                        <div className="text-sm font-semibold text-slate-700">{formatDateISO(t.transaction_date)}</div>
+                        <div className="mt-1 text-[11px] font-bold text-slate-500">Conta</div>
+                        <div className="text-sm font-semibold text-slate-700">{t.account_name || t.account_id}</div>
                       </div>
-                      <div className="min-w-[110px] text-center">
+
+                      <div>
                         <div className="text-[11px] font-bold text-slate-500">Valor</div>
                         <div
                           className={`text-sm font-black ${
@@ -277,9 +271,13 @@ export function TransactionsPage() {
                           {formatMoney(t.amount)}
                         </div>
                       </div>
+                      <div>
+                        <div className="text-[11px] font-bold text-slate-500">Status</div>
+                        <div className="text-sm font-semibold text-slate-700">{statusLabel(t.status)}</div>
+                      </div>
                     </div>
 
-                    <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                    <div className="mt-3 flex items-center justify-center gap-2">
                       <Button variant="secondary" size="sm" onClick={() => setEditing(t)}>
                         Editar
                       </Button>

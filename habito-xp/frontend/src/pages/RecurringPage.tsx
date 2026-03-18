@@ -63,7 +63,10 @@ export function RecurringPage() {
         {items.length ? (
           <div className="divide-y divide-slate-100">
             {items.map((r) => (
-              <div key={r.id} className="px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+              <div
+                key={r.id}
+                className="px-5 py-4 flex flex-col sm:flex-row sm:items-center items-center gap-3"
+              >
                 <div className="flex items-start justify-center sm:justify-start gap-3 w-full sm:w-auto">
                   <div
                     className={`h-10 w-10 rounded-2xl grid place-items-center font-black ${
@@ -75,7 +78,7 @@ export function RecurringPage() {
                     {r.type === 'income' ? '+' : '–'}
                   </div>
 
-                  <div className="min-w-0 flex-1 text-center sm:text-left">
+                  <div className="min-w-0 flex-1 w-full text-center sm:text-left sm:w-auto">
                     <div className="font-black text-slate-900 break-words leading-snug">
                       {r.description || 'Recorrência'}
                     </div>
@@ -85,7 +88,7 @@ export function RecurringPage() {
                   </div>
                 </div>
 
-                <div className="font-black text-slate-900 text-center sm:text-right whitespace-nowrap">
+                <div className="font-black text-slate-900 text-center sm:text-right whitespace-nowrap w-full sm:w-auto">
                   {formatMoney(r.amount)}
                 </div>
 
