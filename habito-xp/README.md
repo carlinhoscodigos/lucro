@@ -11,6 +11,7 @@ Registo de pedidos e tarefas. Cada item fica com um check-in: quando for feito, 
 - [x] Backend local: Postgres, rota /health, CORS, PORT por env. Frontend React+Vite com VITE_API_URL
 - [x] Criar .env com DATABASE_URL (Neon), PORT, JWT_SECRET e tabelas users, accounts, categories, transactions
 - [x] Configurar CORS com localhost:5173, lucro.onrender.com e credentials: true
+- [x] Corrigir URL da API: VITE_API_URL=https://lucro.onrender.com (sem https duplicado)
 
 ---
 
