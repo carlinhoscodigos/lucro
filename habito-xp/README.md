@@ -20,6 +20,8 @@ Registo de pedidos e tarefas. Cada item fica com um check-in: quando for feito, 
 - [x] Corrigir 404 no Vercel em rotas (SPA rewrite para /login)
 - [x] Corrigir 500 no /auth/login (troca bcrypt -> bcryptjs + errors em JSON)
 - [x] Corrigir deploy no Render: migração incremental adiciona colunas faltantes em `users` (is_active/plan/password_hash)
+- [x] Opção B: `npm start` roda migrações automaticamente (Render free)
+- [x] Migrações incrementais: corrigir colunas faltantes em accounts/categories/transactions para evitar 502/503 no Render
 
 ---
 
