@@ -8,8 +8,10 @@ import './index.css';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 15_000,
+      // Cache mais agressivo para UX rápida em SaaS (evita refetch a cada clique no menu)
+      staleTime: 5 * 60_000,
       refetchOnWindowFocus: false,
+      refetchOnMount: false,
       retry: 1,
     },
   },

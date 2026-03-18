@@ -1,10 +1,13 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { Bell, LayoutDashboard, List, Wallet, Tags, Target, Repeat, BarChart3, Settings, PieChart, Search, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../hooks/useAuth';
 import { logout } from '../services/auth.service';
+import { useQueryClient } from '@tanstack/react-query';
+import { listAccounts } from '../services/accounts.service';
+import { listCategories } from '../services/categories.service';
 
 const nav = [
   { to: '/app/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -22,6 +25,13 @@ export function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const qc = useQueryClient();
+
+  // Prefetch para navegação instantânea (evita “carregando” ao clicar no menu)
+  useEffect(() => {
+    qc.prefetchQuery({ queryKey: ['accounts'], queryFn: listAccounts, staleTime: 10 * 60_000 });
+    qc.prefetchQuery({ queryKey: ['categories'], queryFn: () => listCategories(), staleTime: 10 * 60_000 });
+  }, [qc]);
 
   return (
     <div className="min-h-screen bg-slate-950">

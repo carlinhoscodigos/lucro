@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -58,10 +58,11 @@ export function TransactionsPage() {
   const qTx = useQuery({
     queryKey: ['transactions', params],
     queryFn: () => listTransactions(params),
+    placeholderData: keepPreviousData,
   });
 
-  const qAccounts = useQuery({ queryKey: ['accounts'], queryFn: listAccounts });
-  const qCategories = useQuery({ queryKey: ['categories'], queryFn: () => listCategories() });
+  const qAccounts = useQuery({ queryKey: ['accounts'], queryFn: listAccounts, staleTime: 10 * 60_000 });
+  const qCategories = useQuery({ queryKey: ['categories'], queryFn: () => listCategories(), staleTime: 10 * 60_000 });
 
   const save = useMutation({
     mutationFn: async (input: any) => {
