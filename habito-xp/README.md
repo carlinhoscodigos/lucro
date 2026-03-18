@@ -15,6 +15,7 @@ Registo de pedidos e tarefas. Cada item fica com um check-in: quando for feito, 
 - [x] Schema completo: users, accounts, categories, recurring_transactions, transactions, budgets, goals, notifications, subscriptions, transaction_imports, shared_access, audit_logs
 - [x] Tela de login (Lucrô.) sem "Acesso restrito aos administradores"
 - [x] Ajustar design do login para ficar igual ao layout enviado (sem texto de admins)
+- [x] Área interna SaaS: layout autenticado + 9 páginas (dashboard, lançamentos, contas, categorias, orçamentos, metas, recorrências, relatórios, configurações) com design premium e componentes reutilizáveis
 
 ---
 
