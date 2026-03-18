@@ -171,6 +171,22 @@ export function DashboardPage() {
             {accountId ? 'Visão por conta selecionada' : 'Visão total de todas as contas'}
           </div>
         </div>
+
+        <div className="w-full md:w-[320px] md:flex-shrink-0">
+          <div className="text-xs font-bold text-slate-400 ml-1">Conta</div>
+          <Select
+            value={accountId ?? 'all'}
+            onChange={(e) => setAccountId(e.target.value === 'all' ? null : e.target.value)}
+            wrapperClassName="bg-white/90 rounded-2xl"
+          >
+            <option value="all">Total</option>
+            {(qAccounts.data?.accounts || []).map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
+            ))}
+          </Select>
+        </div>
       </div>
 
       <div
@@ -187,24 +203,6 @@ export function DashboardPage() {
             </CardHeader>
           </Card>
         ))}
-      </div>
-
-      <div className="flex justify-end">
-        <div className="w-full md:w-[320px]">
-          <div className="text-xs font-bold text-slate-400 ml-1">Conta</div>
-          <Select
-            value={accountId ?? 'all'}
-            onChange={(e) => setAccountId(e.target.value === 'all' ? null : e.target.value)}
-            wrapperClassName="bg-white/90 rounded-2xl"
-          >
-            <option value="all">Total</option>
-            {(qAccounts.data?.accounts || []).map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </Select>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
@@ -291,8 +289,8 @@ export function DashboardPage() {
             {isInitialLoad ? (
               <LoadingState title="Carregando categorias…" />
             ) : expensesByCat.length ? (
-              <div className="grid grid-cols-1 md:grid-cols-[1fr_240px] gap-4 items-center">
-                <div className="relative h-[280px]">
+              <div className="flex flex-col md:flex-row gap-4 items-center">
+                <div className="relative w-full md:w-[240px] h-[220px] md:h-[280px] flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -333,9 +331,9 @@ export function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="w-full md:flex-1 space-y-2 relative z-10">
                   {expensesDonutRows.map((e, idx) => (
-                    <div key={idx} className="flex items-center justify-between gap-3">
+                    <div key={idx} className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-2 min-w-0">
                         <span
                           className="h-2.5 w-2.5 rounded-full flex-shrink-0"
@@ -345,7 +343,7 @@ export function DashboardPage() {
                           {e.name} — {e.percent}%
                         </span>
                       </div>
-                      <div className="text-sm font-black text-slate-900">{formatMoney(e.total)}</div>
+                      <div className="text-sm font-black text-slate-900 whitespace-nowrap">{formatMoney(e.total)}</div>
                     </div>
                   ))}
                 </div>
