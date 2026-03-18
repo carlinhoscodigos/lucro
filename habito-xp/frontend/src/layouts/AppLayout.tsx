@@ -132,7 +132,7 @@ export function AppLayout() {
                   <div className="text-sm font-semibold text-slate-500 truncate">
                     Olá{user?.name ? `, ${user.name}` : ''}
                   </div>
-                  <div className="text-base md:text-xl font-black text-slate-900 leading-tight break-words">
+                  <div className="hidden md:block text-base md:text-xl font-black text-slate-900 leading-tight">
                     Bem-vindo de volta
                   </div>
                 </div>

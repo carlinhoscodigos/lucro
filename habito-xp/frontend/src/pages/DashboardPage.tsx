@@ -285,7 +285,7 @@ export function DashboardPage() {
           </CardBody>
         </Card>
 
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader>
             <CardTitle>Despesas por categoria (mês)</CardTitle>
           </CardHeader>
@@ -293,8 +293,8 @@ export function DashboardPage() {
             {isInitialLoad ? (
               <LoadingState title="Carregando categorias…" />
             ) : expensesByCat.length ? (
-              <div className="flex flex-col md:flex-row gap-4 items-center">
-                <div className="relative w-full md:w-[240px] h-[220px] md:h-[280px] flex items-center justify-center">
+              <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                <div className="relative w-full md:w-[240px] h-[220px] md:h-[280px] flex items-center justify-center flex-shrink-0">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -335,9 +335,9 @@ export function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="w-full md:flex-1 space-y-2 relative z-10">
+                <div className="w-full md:flex-1 space-y-2">
                   {expensesDonutRows.map((e, idx) => (
-                    <div key={idx} className="flex items-start justify-between gap-3">
+                    <div key={idx} className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 min-w-0">
                         <span
                           className="h-2.5 w-2.5 rounded-full flex-shrink-0"
