@@ -4,45 +4,56 @@
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background: linear-gradient(160deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  background: #020617;
 }
 
 .login-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   background: #fff;
-  border-radius: 16px;
-  padding: 2.5rem 2rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  border-radius: 32px;
+  padding: 2.5rem;
+  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.55);
+  position: relative;
+  overflow: hidden;
+}
+
+.login-topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  background: #10b981;
 }
 
 .login-header {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
+  text-align: center;
 }
 
 .login-logo {
   margin: 0;
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #1a1a2e;
+  font-size: 2.25rem;
+  font-weight: 900;
+  color: #0f172a;
   letter-spacing: -0.02em;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 2px;
 }
 
-.login-logo-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #22c55e;
-  flex-shrink: 0;
+.login-logo-accent {
+  color: #10b981;
+  font-size: 3rem;
+  line-height: 0;
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .login-field {
@@ -53,28 +64,30 @@
 
 .login-field label {
   font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
+  font-weight: 800;
+  color: #334155;
+  margin-left: 0.25rem;
 }
 
 .login-input-wrap {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 16px;
   padding: 0 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }
 
 .login-input-wrap:focus-within {
-  border-color: #22c55e;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+  border-color: #10b981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+  background: #f8fafc;
 }
 
 .login-input-icon {
-  color: #9ca3af;
+  color: #94a3b8;
   display: flex;
   align-items: center;
   flex-shrink: 0;
@@ -84,14 +97,14 @@
   flex: 1;
   border: none;
   background: transparent;
-  padding: 0.875rem 0;
+  padding: 1rem 0;
   font-size: 1rem;
-  color: #111827;
+  color: #0f172a;
   outline: none;
 }
 
 .login-input-wrap input::placeholder {
-  color: #9ca3af;
+  color: #94a3b8;
 }
 
 .login-submit {
@@ -100,24 +113,56 @@
   justify-content: center;
   gap: 0.5rem;
   width: 100%;
-  margin-top: 0.5rem;
-  padding: 0.875rem 1.5rem;
+  margin-top: 0.75rem;
+  padding: 1.25rem 1.5rem;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 800;
   color: #fff;
-  background: #22c55e;
+  background: #10b981;
   border: none;
-  border-radius: 10px;
+  border-radius: 16px;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
+  transition: background 0.2s, transform 0.08s, opacity 0.2s;
+  box-shadow: 0 12px 25px -12px rgba(16, 185, 129, 0.65);
 }
 
 .login-submit:hover {
-  background: #16a34a;
+  background: #059669;
 }
 
 .login-submit:active {
   transform: scale(0.98);
+}
+
+.login-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.login-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  animation: login-spin 0.8s linear infinite;
+}
+
+@keyframes login-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.login-error {
+  background: #fff1f2;
+  color: #e11d48;
+  padding: 1rem;
+  border-radius: 16px;
+  margin-bottom: 1.25rem;
+  text-align: center;
+  font-weight: 600;
+  border: 1px solid #ffe4e6;
 }
 
 .login-security {
@@ -125,15 +170,16 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  margin-top: 2rem;
+  margin-top: 2.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid #f8fafc;
   font-size: 0.8125rem;
-  color: #6b7280;
+  color: #94a3b8;
+  font-weight: 600;
 }
 
 .login-security-icon {
-  color: #22c55e;
+  color: #10b981;
   display: flex;
   align-items: center;
   flex-shrink: 0;

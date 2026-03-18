@@ -31,21 +31,36 @@ const CheckIcon = () => (
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   function handleSubmit(e) {
     e.preventDefault();
+    setError('');
+    setLoading(true);
     // TODO: chamar API de login
-    console.log({ email, password });
+    setTimeout(() => {
+      setLoading(false);
+      console.log({ email, password });
+    }, 250);
   }
 
   return (
     <div className="login-screen">
       <div className="login-card">
+        <div className="login-topbar" aria-hidden />
+
         <header className="login-header">
           <h1 className="login-logo">
-            Lucrô.<span className="login-logo-dot" aria-hidden />
+            Lucrô<span className="login-logo-accent">.</span>
           </h1>
         </header>
+
+        {error ? (
+          <div className="login-error" role="alert">
+            {error}
+          </div>
+        ) : null}
 
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="login-field">
@@ -75,7 +90,7 @@ export default function Login() {
               <input
                 id="login-password"
                 type="password"
-                placeholder="********"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
@@ -84,9 +99,14 @@ export default function Login() {
             </div>
           </div>
 
-          <button type="submit" className="login-submit">
-            Entrar no sistema
-            <ArrowRightIcon />
+          <button type="submit" className="login-submit" disabled={loading}>
+            {loading ? (
+              <span className="login-spinner" aria-label="A carregar" />
+            ) : (
+              <>
+                Entrar no sistema <ArrowRightIcon />
+              </>
+            )}
           </button>
         </form>
 
