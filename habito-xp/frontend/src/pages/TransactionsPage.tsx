@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/State';
+import { Select } from '../components/ui/Select';
 import { listAccounts } from '../services/accounts.service';
 import { listCategories } from '../services/categories.service';
 import { createTransaction, deleteTransaction, listTransactions, updateTransaction } from '../services/transactions.service';
@@ -22,15 +23,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      {...props}
-      className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500"
-    />
-  );
-}
-
-function Select(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return (
-    <select
       {...props}
       className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold text-slate-900 outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500"
     />

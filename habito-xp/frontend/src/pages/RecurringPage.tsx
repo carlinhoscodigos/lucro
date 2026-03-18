@@ -7,6 +7,7 @@ import { listAccounts } from '../services/accounts.service';
 import { listCategories } from '../services/categories.service';
 import { createRecurring, deleteRecurring, listRecurring, updateRecurring, type RecurringTransaction } from '../services/recurring.service';
 import { formatDateISO, formatMoney } from '../utils/format';
+import { Select } from '../components/ui/Select';
 
 export function RecurringPage() {
   const qc = useQueryClient();
@@ -108,10 +109,10 @@ export function RecurringPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <div className="text-xs font-bold text-slate-600 ml-1">Tipo</div>
-                    <select name="type" defaultValue={editing?.type || 'expense'} className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold">
+                    <Select name="type" defaultValue={editing?.type || 'expense'}>
                       <option value="income">Entrada</option>
                       <option value="expense">Saída</option>
-                    </select>
+                    </Select>
                   </div>
                   <div className="space-y-1">
                     <div className="text-xs font-bold text-slate-600 ml-1">Valor</div>
@@ -125,28 +126,28 @@ export function RecurringPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <div className="text-xs font-bold text-slate-600 ml-1">Conta</div>
-                    <select name="account_id" defaultValue={editing?.account_id || ''} required className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold">
+                    <Select name="account_id" defaultValue={editing?.account_id || ''} required>
                       <option value="" disabled selected>Selecione…</option>
                       {(qAccounts.data?.accounts || []).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-                    </select>
+                    </Select>
                   </div>
                   <div className="space-y-1">
                     <div className="text-xs font-bold text-slate-600 ml-1">Categoria</div>
-                    <select name="category_id" defaultValue={editing?.category_id || ''} className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold">
+                    <Select name="category_id" defaultValue={editing?.category_id || ''}>
                       <option value="">Sem categoria</option>
                       {(qCats.data?.categories || []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
+                    </Select>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <div className="text-xs font-bold text-slate-600 ml-1">Frequência</div>
-                    <select name="frequency" defaultValue={editing?.frequency || 'monthly'} className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold">
+                    <Select name="frequency" defaultValue={editing?.frequency || 'monthly'}>
                       <option value="daily">Diária</option>
                       <option value="weekly">Semanal</option>
                       <option value="monthly">Mensal</option>
                       <option value="yearly">Anual</option>
-                    </select>
+                    </Select>
                   </div>
                   <div className="space-y-1">
                     <div className="text-xs font-bold text-slate-600 ml-1">Dia do mês (opcional)</div>

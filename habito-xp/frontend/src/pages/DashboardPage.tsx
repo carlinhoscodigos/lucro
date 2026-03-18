@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, CartesianGrid } from 'recharts';
 import { Card, CardBody, CardHeader, CardTitle, CardValue } from '../components/ui/Card';
 import { ErrorState, LoadingState, EmptyState } from '../components/ui/State';
+import { Select } from '../components/ui/Select';
 import { formatMoney, formatDateISO } from '../utils/format';
 import type { DashboardResponse } from '../types/api';
 import { request } from '../services/http';
@@ -23,6 +24,7 @@ function yTickFormatter(value: any) {
 export function DashboardPage() {
   // null = total (todas as contas)
   const [accountId, setAccountId] = useState<string | null>(null);
+  const qc = useQueryClient();
 
   const qAccounts = useQuery({ queryKey: ['accounts'], queryFn: listAccounts, staleTime: 10 * 60_000 });
 
@@ -39,9 +41,29 @@ export function DashboardPage() {
     },
   });
 
+  // Prefetch de dashboard por conta para a troca no dropdown ficar instantânea.
+  // Mantém apenas alguns fetches em background e evita “esperar carregando”.
+  useEffect(() => {
+    const accounts = qAccounts.data?.accounts || [];
+    if (!accounts.length) return;
+    for (const a of accounts.slice(0, 8)) {
+      qc.prefetchQuery({
+        queryKey: ['dashboard', a.id],
+        queryFn: () => request<DashboardResponse>(`/dashboard?account_id=${encodeURIComponent(a.id)}`),
+        staleTime: 10 * 60_000,
+      });
+    }
+    // Prefetch do total (sem filtro)
+    qc.prefetchQuery({
+      queryKey: ['dashboard'],
+      queryFn: () => request<DashboardResponse>('/dashboard'),
+      staleTime: 10 * 60_000,
+    });
+  }, [qAccounts.data, qc]);
+
   if (q.isError) return <ErrorState message={(q.error as Error)?.message} />;
   const data = q.data;
-  const isDashboardLoading = q.isLoading || (!data && q.isFetching);
+  const isInitialLoad = q.isLoading && !data;
 
   const monthly = useMemo(
     () =>
@@ -88,10 +110,10 @@ export function DashboardPage() {
 
         <div className="w-full md:w-[320px]">
           <div className="text-xs font-bold text-slate-400 ml-1">Conta</div>
-          <select
+          <Select
             value={accountId ?? 'all'}
             onChange={(e) => setAccountId(e.target.value === 'all' ? null : e.target.value)}
-            className="w-full h-11 rounded-2xl border border-slate-100 bg-white/90 px-4 text-sm font-semibold outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500"
+            wrapperClassName="bg-white/90 rounded-2xl"
           >
             <option value="all">Total</option>
             {(qAccounts.data?.accounts || []).map((a) => (
@@ -99,7 +121,7 @@ export function DashboardPage() {
                 {a.name}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       </div>
 
@@ -120,7 +142,7 @@ export function DashboardPage() {
             <CardTitle>Entradas vs saídas (últimos 12 meses)</CardTitle>
           </CardHeader>
           <CardBody>
-            {isDashboardLoading ? (
+            {isInitialLoad ? (
               <LoadingState title="Carregando gráficos…" />
             ) : monthly.length ? (
               <div className="h-[300px]">
@@ -182,7 +204,7 @@ export function DashboardPage() {
             <CardTitle>Despesas por categoria (mês)</CardTitle>
           </CardHeader>
           <CardBody>
-            {isDashboardLoading ? (
+            {isInitialLoad ? (
               <LoadingState title="Carregando categorias…" />
             ) : expensesByCat.length ? (
               <div className="grid grid-cols-1 md:grid-cols-[1fr_240px] gap-4 items-center">
@@ -243,7 +265,7 @@ export function DashboardPage() {
             <CardTitle>Últimos lançamentos</CardTitle>
           </CardHeader>
           <CardBody>
-            {isDashboardLoading ? (
+            {isInitialLoad ? (
               <LoadingState title="Carregando lançamentos…" />
             ) : lastTransactions.length ? (
               <div className="divide-y divide-slate-100">
@@ -275,7 +297,7 @@ export function DashboardPage() {
             <CardTitle>Alertas</CardTitle>
           </CardHeader>
           <CardBody>
-            {isDashboardLoading ? (
+            {isInitialLoad ? (
               <LoadingState title="Carregando alertas…" />
             ) : alerts.length ? (
               <div className="space-y-2">

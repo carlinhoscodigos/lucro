@@ -4,7 +4,8 @@ export type ReportSummary = {
   from: string;
   to: string;
   totals: { income: string | number; expense: string | number };
-  by_category: Array<{ name: string; color: string; total: string | number }>;
+  by_category_expense: Array<{ name: string; color: string; total: string | number }>;
+  by_category_income: Array<{ name: string; color: string; total: string | number }>;
   series: Array<{ month: string; income: string | number; expense: string | number }>;
 };
 

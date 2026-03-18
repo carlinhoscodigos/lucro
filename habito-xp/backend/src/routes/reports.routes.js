@@ -19,7 +19,7 @@ router.get('/summary', async (req, res) => {
     [userId, from, to]
   );
 
-  const byCategory = await pool.query(
+  const byCategoryExpense = await pool.query(
     `SELECT
       COALESCE(c.name, 'Sem categoria') AS name,
       COALESCE(c.color, '#94a3b8') AS color,
@@ -27,6 +27,21 @@ router.get('/summary', async (req, res) => {
      FROM transactions t
      LEFT JOIN categories c ON c.id = t.category_id
      WHERE t.user_id = $1 AND t.type = 'expense' AND t.status <> 'canceled'
+       AND t.transaction_date BETWEEN $2 AND $3
+     GROUP BY 1,2
+     ORDER BY total DESC
+     LIMIT 12`,
+    [userId, from, to]
+  );
+
+  const byCategoryIncome = await pool.query(
+    `SELECT
+      COALESCE(c.name, 'Sem categoria') AS name,
+      COALESCE(c.color, '#94a3b8') AS color,
+      SUM(t.amount)::numeric AS total
+     FROM transactions t
+     LEFT JOIN categories c ON c.id = t.category_id
+     WHERE t.user_id = $1 AND t.type = 'income' AND t.status <> 'canceled'
        AND t.transaction_date BETWEEN $2 AND $3
      GROUP BY 1,2
      ORDER BY total DESC
@@ -51,7 +66,8 @@ router.get('/summary', async (req, res) => {
     from,
     to,
     totals: totals.rows[0],
-    by_category: byCategory.rows,
+    by_category_expense: byCategoryExpense.rows,
+    by_category_income: byCategoryIncome.rows,
     series: series.rows,
   });
 });

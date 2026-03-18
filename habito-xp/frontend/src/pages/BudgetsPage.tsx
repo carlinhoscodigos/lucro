@@ -6,6 +6,7 @@ import { EmptyState, ErrorState, LoadingState } from '../components/ui/State';
 import { listCategories } from '../services/categories.service';
 import { createBudget, deleteBudget, listBudgets, updateBudget } from '../services/budgets.service';
 import { formatMoney } from '../utils/format';
+import { Select } from '../components/ui/Select';
 
 function pct(used: number, limit: number) {
   if (!limit) return 0;
@@ -149,16 +150,14 @@ export function BudgetsPage() {
               >
                 <div className="space-y-1">
                   <div className="text-xs font-bold text-slate-600 ml-1">Categoria (despesa)</div>
-                  <select name="category_id" className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold" required>
-                    <option value="" disabled selected>
-                      Selecione…
-                    </option>
+                  <Select name="category_id" required wrapperClassName="">
+                    <option value="" disabled selected>Selecione…</option>
                     {(qCats.data?.categories ?? []).map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">

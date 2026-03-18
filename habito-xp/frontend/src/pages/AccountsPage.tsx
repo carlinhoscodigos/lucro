@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -6,10 +6,11 @@ import { EmptyState, ErrorState, LoadingState } from '../components/ui/State';
 import { createAccount, deleteAccount, listAccounts, updateAccount } from '../services/accounts.service';
 import { formatMoney } from '../utils/format';
 import type { Account } from '../types/api';
+import { Select } from '../components/ui/Select';
 
 export function AccountsPage() {
   const qc = useQueryClient();
-  const q = useQuery({ queryKey: ['accounts'], queryFn: listAccounts });
+  const q = useQuery({ queryKey: ['accounts'], queryFn: listAccounts, staleTime: 10 * 60_000, placeholderData: keepPreviousData });
   const [editing, setEditing] = useState<Account | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -129,13 +130,13 @@ export function AccountsPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <div className="text-xs font-bold text-slate-600 ml-1">Tipo</div>
-                    <select name="type" defaultValue={editing?.type || 'checking'} className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold">
+                    <Select name="type" defaultValue={editing?.type || 'checking'}>
                       <option value="checking">Conta corrente</option>
                       <option value="savings">Poupança</option>
                       <option value="wallet">Carteira</option>
                       <option value="credit_card">Cartão de crédito</option>
                       <option value="investment">Investimento</option>
-                    </select>
+                    </Select>
                   </div>
                   <div className="space-y-1">
                     <div className="text-xs font-bold text-slate-600 ml-1">Saldo inicial</div>

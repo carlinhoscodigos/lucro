@@ -5,6 +5,7 @@ import { Card } from '../components/ui/Card';
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/State';
 import { createCategory, deleteCategory, listCategories, updateCategory } from '../services/categories.service';
 import type { Category } from '../types/api';
+import { Select } from '../components/ui/Select';
 
 const COLOR_PRESETS = [
   { value: '#10b981', label: 'Verde' },
@@ -29,6 +30,7 @@ const ICON_PRESETS = [
   { value: 'smile', label: 'Lazer', emoji: '😊' },
   { value: 'heart', label: 'Saúde', emoji: '❤️' },
   { value: 'credit-card', label: 'Cartão', emoji: '💳' },
+  { value: 'credit_card', label: 'Cartão', emoji: '💳' },
 ] as const;
 
 function iconEmoji(icon?: string | null) {
@@ -148,32 +150,30 @@ export function CategoriesPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <div className="text-xs font-bold text-slate-600 ml-1">Tipo</div>
-                    <select name="type" defaultValue={editing?.type || 'expense'} className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold">
+                    <Select name="type" defaultValue={editing?.type || 'expense'}>
                       <option value="income">Receita</option>
                       <option value="expense">Despesa</option>
-                    </select>
+                    </Select>
                   </div>
                   <div className="space-y-1">
                     <div className="text-xs font-bold text-slate-600 ml-1">Cor</div>
-                    <select
+                    <Select
                       name="color"
                       defaultValue={editing?.color || COLOR_PRESETS[0].value}
-                      className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold outline-none"
                     >
                       {COLOR_PRESETS.map((c) => (
                         <option key={c.value} value={c.value}>
                           {c.label}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-xs font-bold text-slate-600 ml-1">Ícone (opcional)</div>
-                  <select
+                  <Select
                     name="icon"
                     defaultValue={editing?.icon || 'shopping-cart'}
-                    className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold outline-none"
                   >
                     {ICON_PRESETS.map((i) => (
                       <option key={i.value} value={i.value}>
@@ -181,7 +181,7 @@ export function CategoriesPage() {
                       </option>
                     ))}
                     <option value="">Nenhum</option>
-                  </select>
+                  </Select>
                   <div className="pt-2 text-xs font-semibold text-slate-500 flex items-center gap-2">
                     <span className="inline-flex items-center justify-center h-6 w-6 rounded-lg bg-slate-100">
                       {iconEmoji(editing?.icon)}

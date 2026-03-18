@@ -90,8 +90,8 @@ export function AppLayout() {
                       to={item.to}
                       className={({ isActive }) =>
                         clsx(
-                          'flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-semibold transition',
-                          isActive ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50'
+                          'flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-all duration-200',
+                          isActive ? 'bg-emerald-50 text-emerald-700 shadow-sm ring-1 ring-emerald-100' : 'text-slate-600 hover:bg-slate-50'
                         )
                       }
                     >
@@ -175,8 +175,8 @@ export function AppLayout() {
       {/* Mobile drawer */}
       {mobileOpen ? (
         <div className="fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-          <div className="absolute left-0 top-0 h-full w-[300px] bg-white shadow-2xl">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <div className="absolute left-0 top-0 h-full w-[320px] bg-white/95 backdrop-blur shadow-2xl">
             <div className="h-2 bg-emerald-500" />
             <div className="p-5 flex items-center justify-between">
               <div className="text-2xl font-black text-slate-900 flex items-center gap-1">
@@ -194,8 +194,8 @@ export function AppLayout() {
                   onClick={() => setMobileOpen(false)}
                   className={({ isActive }) =>
                     clsx(
-                      'flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-semibold transition',
-                      isActive ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50'
+                      'flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-all duration-200',
+                      isActive ? 'bg-emerald-50 text-emerald-700 shadow-sm ring-1 ring-emerald-100' : 'text-slate-600 hover:bg-slate-50'
                     )
                   }
                 >

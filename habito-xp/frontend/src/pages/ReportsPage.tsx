@@ -1,16 +1,30 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar } from 'recharts';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, BarChart, Bar, CartesianGrid } from 'recharts';
 import { Button } from '../components/ui/Button';
 import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import { ErrorState, LoadingState } from '../components/ui/State';
 import { exportCsv, getReportSummary } from '../services/reports.service';
 import { formatMoney } from '../utils/format';
+import { Select } from '../components/ui/Select';
+
+function typeLabel(key: string) {
+  if (key === 'income') return 'Receitas';
+  if (key === 'expense') return 'Despesas';
+  return key;
+}
+
+function yTickFormatter(value: any) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return String(value);
+  return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(n);
+}
 
 export function ReportsPage() {
   const today = new Date().toISOString().slice(0, 10);
   const [from, setFrom] = useState<string>(`${new Date().getFullYear()}-01-01`);
   const [to, setTo] = useState<string>(today);
+  const [rankType, setRankType] = useState<'expense' | 'income'>('expense');
 
   const q = useQuery({
     queryKey: ['reports', from, to],
@@ -20,8 +34,23 @@ export function ReportsPage() {
   const totals = q.data?.totals;
   const balance = totals ? Number(totals.income) - Number(totals.expense) : 0;
 
-  const byCat = useMemo(() => (q.data?.by_category || []).map((c) => ({ ...c, total: Number(c.total) })), [q.data]);
+  const byCatExpense = useMemo(
+    () => (q.data?.by_category_expense || []).map((c) => ({ ...c, total: Number(c.total) })),
+    [q.data]
+  );
+  const byCatIncome = useMemo(
+    () => (q.data?.by_category_income || []).map((c) => ({ ...c, total: Number(c.total) })),
+    [q.data]
+  );
+  const byCat = rankType === 'expense' ? byCatExpense : byCatIncome;
+
   const series = useMemo(() => (q.data?.series || []).map((s) => ({ ...s, income: Number(s.income), expense: Number(s.expense) })), [q.data]);
+
+  useEffect(() => {
+    if (!q.data) return;
+    if (rankType === 'expense' && byCatExpense.length === 0 && byCatIncome.length > 0) setRankType('income');
+    if (rankType === 'income' && byCatIncome.length === 0 && byCatExpense.length > 0) setRankType('expense');
+  }, [q.data, rankType, byCatExpense.length, byCatIncome.length]);
 
   return (
     <div className="space-y-6">
@@ -65,11 +94,48 @@ export function ReportsPage() {
               <div className="h-[320px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={series}>
-                    <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip />
-                    <Area type="monotone" dataKey="income" stroke="#10b981" fill="#10b981" fillOpacity={0.12} />
-                    <Area type="monotone" dataKey="expense" stroke="#ef4444" fill="#ef4444" fillOpacity={0.10} />
+                    <CartesianGrid stroke="#eef2ff" strokeDasharray="6 6" vertical={false} />
+                    <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: '#94a3b8' }}
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={yTickFormatter}
+                    />
+                    <Tooltip
+                      formatter={(value: any, name: any) => [formatMoney(value), typeLabel(String(name))]}
+                      labelFormatter={(label: any) => `Mês ${String(label)}`}
+                      contentStyle={{
+                        background: 'white',
+                        borderRadius: 14,
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 20px 40px rgba(2,6,23,0.08)',
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="income"
+                      name="income"
+                      stroke="#10b981"
+                      strokeWidth={4}
+                      fill="#10b981"
+                      fillOpacity={0.16}
+                      dot={false}
+                      activeDot={{ r: 5, strokeWidth: 2, fill: '#10b981', stroke: '#10b981' }}
+                      isAnimationActive={false}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="expense"
+                      name="expense"
+                      stroke="#ef4444"
+                      strokeWidth={4}
+                      fill="#ef4444"
+                      fillOpacity={0.14}
+                      dot={false}
+                      activeDot={{ r: 5, strokeWidth: 2, fill: '#ef4444', stroke: '#ef4444' }}
+                      isAnimationActive={false}
+                    />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -78,16 +144,41 @@ export function ReportsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Ranking de categorias (despesas)</CardTitle>
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle>Ranking de categorias ({rankType === 'expense' ? 'despesas' : 'receitas'})</CardTitle>
+                <div className="w-[180px]">
+                  <Select
+                    value={rankType}
+                    onChange={(e) => setRankType(e.target.value as any)}
+                    wrapperClassName="bg-slate-50 rounded-2xl"
+                  >
+                    <option value="expense">Despesas</option>
+                    <option value="income">Receitas</option>
+                  </Select>
+                </div>
+              </div>
             </CardHeader>
             <CardBody>
               <div className="h-[320px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={byCat}>
-                    <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} />
-                    <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip />
-                    <Bar dataKey="total" fill="#0ea5e9" radius={[10, 10, 0, 0]} />
+                    <CartesianGrid stroke="#eef2ff" strokeDasharray="6 6" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} interval={0} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={yTickFormatter} />
+                    <Tooltip
+                      formatter={(value: any) => formatMoney(value)}
+                      contentStyle={{
+                        background: 'white',
+                        borderRadius: 14,
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 20px 40px rgba(2,6,23,0.08)',
+                      }}
+                    />
+                    <Bar
+                      dataKey="total"
+                      fill={rankType === 'expense' ? '#ef4444' : '#10b981'}
+                      radius={[10, 10, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

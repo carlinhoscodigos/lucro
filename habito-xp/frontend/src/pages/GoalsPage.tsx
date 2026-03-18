@@ -5,6 +5,7 @@ import { Card } from '../components/ui/Card';
 import { EmptyState, ErrorState, LoadingState } from '../components/ui/State';
 import { createGoal, deleteGoal, listGoals, updateGoal, type Goal } from '../services/goals.service';
 import { formatMoney } from '../utils/format';
+import { Select } from '../components/ui/Select';
 
 function Progress({ value }: { value: number }) {
   const v = Math.max(0, Math.min(100, value));
@@ -131,11 +132,11 @@ export function GoalsPage() {
                   </div>
                   <div className="space-y-1">
                     <div className="text-xs font-bold text-slate-600 ml-1">Status</div>
-                    <select name="status" defaultValue={editing?.status || 'active'} className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold">
-                      <option value="active">active</option>
-                      <option value="completed">completed</option>
-                      <option value="canceled">canceled</option>
-                    </select>
+                    <Select name="status" defaultValue={editing?.status || 'active'}>
+                      <option value="active">Ativa</option>
+                      <option value="completed">Concluída</option>
+                      <option value="canceled">Cancelada</option>
+                    </Select>
                   </div>
                 </div>
                 <div className="pt-3 flex justify-end gap-2">
