@@ -23,10 +23,15 @@ Registo de pedidos e tarefas. Cada item fica com um check-in: quando for feito, 
 - [x] Opção B: `npm start` roda migrações automaticamente (Render free)
 - [x] Migrações incrementais: corrigir colunas faltantes em accounts/categories/transactions para evitar 502/503 no Render
 - [x] Performance UX: cache/prefetch React Query para navegação mais rápida (dashboard/lançamentos/contas)
+- [x] Dashboard: melhorar visual/legibilidade dos gráficos (Recharts + tooltip PT-BR)
+- [x] Dashboard: saldo atual reflete alterações sem recarregar a página
+- [x] Backend: saldo atual inclui `accounts.initial_balance` (e conta selecionada)
+- [x] Backend: semear categorias padrão no primeiro login
+- [x] UI: traduzir `income/expense` e frequências para português nas telas (Categorias/Recorrências)
 
 ---
 
-*Última atualização: 17/03/2026*
+*Última atualização: 18/03/2026*
 
 ---
 

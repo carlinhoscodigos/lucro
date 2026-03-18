@@ -16,6 +16,14 @@ export function RecurringPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RecurringTransaction | null>(null);
 
+  function frequencyLabel(freq: RecurringTransaction['frequency']) {
+    if (freq === 'daily') return 'Diária';
+    if (freq === 'weekly') return 'Semanal';
+    if (freq === 'monthly') return 'Mensal';
+    if (freq === 'yearly') return 'Anual';
+    return freq;
+  }
+
   const save = useMutation({
     mutationFn: async (input: any) => (editing ? updateRecurring(editing.id, input) : createRecurring(input)),
     onSuccess: async () => {
@@ -52,10 +60,10 @@ export function RecurringPage() {
                 <div className={`h-10 w-10 rounded-2xl grid place-items-center font-black ${r.type === 'income' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
                   {r.type === 'income' ? '+' : '–'}
                 </div>
-                <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1">
                   <div className="font-black text-slate-900 truncate">{r.description || 'Recorrência'}</div>
                   <div className="text-sm text-slate-500 font-semibold">
-                    {r.frequency} • próxima: {formatDateISO(r.next_run_date)}
+                    {frequencyLabel(r.frequency)} • próxima: {formatDateISO(r.next_run_date)}
                   </div>
                 </div>
                 <div className="font-black text-slate-900">{formatMoney(r.amount)}</div>
@@ -101,8 +109,8 @@ export function RecurringPage() {
                   <div className="space-y-1">
                     <div className="text-xs font-bold text-slate-600 ml-1">Tipo</div>
                     <select name="type" defaultValue={editing?.type || 'expense'} className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold">
-                      <option value="income">income</option>
-                      <option value="expense">expense</option>
+                      <option value="income">Entrada</option>
+                      <option value="expense">Saída</option>
                     </select>
                   </div>
                   <div className="space-y-1">
@@ -134,10 +142,10 @@ export function RecurringPage() {
                   <div className="space-y-1">
                     <div className="text-xs font-bold text-slate-600 ml-1">Frequência</div>
                     <select name="frequency" defaultValue={editing?.frequency || 'monthly'} className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold">
-                      <option value="daily">daily</option>
-                      <option value="weekly">weekly</option>
-                      <option value="monthly">monthly</option>
-                      <option value="yearly">yearly</option>
+                      <option value="daily">Diária</option>
+                      <option value="weekly">Semanal</option>
+                      <option value="monthly">Mensal</option>
+                      <option value="yearly">Anual</option>
                     </select>
                   </div>
                   <div className="space-y-1">

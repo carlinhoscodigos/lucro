@@ -55,8 +55,10 @@ export function TransactionsPage() {
     };
   }, [sp]);
 
+  const txKey = useMemo(() => ['transactions', JSON.stringify(params)], [params]);
+
   const qTx = useQuery({
-    queryKey: ['transactions', params],
+    queryKey: txKey,
     queryFn: () => listTransactions(params),
     placeholderData: keepPreviousData,
   });
@@ -88,10 +90,10 @@ export function TransactionsPage() {
 
   const showForm = sp.get('new') === '1' || !!editing;
 
-  if (qTx.isLoading) return <LoadingState title="Carregando lançamentos…" />;
   if (qTx.isError) return <ErrorState message={(qTx.error as Error).message} />;
 
-  const data = qTx.data!;
+  const data = qTx.data;
+  if (!data) return <LoadingState title="Carregando lançamentos…" />;
 
   return (
     <div className="space-y-6">

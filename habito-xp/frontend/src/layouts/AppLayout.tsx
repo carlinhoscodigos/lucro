@@ -8,6 +8,9 @@ import { logout } from '../services/auth.service';
 import { useQueryClient } from '@tanstack/react-query';
 import { listAccounts } from '../services/accounts.service';
 import { listCategories } from '../services/categories.service';
+import { listTransactions } from '../services/transactions.service';
+import { request } from '../services/http';
+import type { DashboardResponse } from '../types/api';
 
 const nav = [
   { to: '/app/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -23,15 +26,50 @@ const nav = [
 
 export function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
 
-  // Prefetch para navegação instantânea (evita “carregando” ao clicar no menu)
+  // Prefetch para navegação instantânea (evita “carregando” ao clicar no menu).
+  // A ideia é: quando o user entra na área logada, já buscar as páginas mais prováveis em background.
   useEffect(() => {
-    qc.prefetchQuery({ queryKey: ['accounts'], queryFn: listAccounts, staleTime: 10 * 60_000 });
-    qc.prefetchQuery({ queryKey: ['categories'], queryFn: () => listCategories(), staleTime: 10 * 60_000 });
-  }, [qc]);
+    if (!token) return;
+
+    qc.prefetchQuery({
+      queryKey: ['dashboard'],
+      queryFn: () => request<DashboardResponse>('/dashboard'),
+      staleTime: 10 * 60_000,
+    });
+
+    qc.prefetchQuery({
+      queryKey: ['accounts'],
+      queryFn: listAccounts,
+      staleTime: 10 * 60_000,
+    });
+
+    qc.prefetchQuery({
+      queryKey: ['categories'],
+      queryFn: () => listCategories(),
+      staleTime: 10 * 60_000,
+    });
+
+    const defaultTxParams = {
+      from: undefined,
+      to: undefined,
+      type: undefined,
+      category_id: undefined,
+      account_id: undefined,
+      status: undefined,
+      page: 1,
+      pageSize: 20,
+    };
+
+    qc.prefetchQuery({
+      queryKey: ['transactions', JSON.stringify(defaultTxParams)],
+      queryFn: () => listTransactions(defaultTxParams),
+      staleTime: 10 * 60_000,
+    });
+  }, [qc, token]);
 
   return (
     <div className="min-h-screen bg-slate-950">

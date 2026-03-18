@@ -113,8 +113,8 @@ export function CategoriesPage() {
                   <div className="space-y-1">
                     <div className="text-xs font-bold text-slate-600 ml-1">Tipo</div>
                     <select name="type" defaultValue={editing?.type || 'expense'} className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold">
-                      <option value="income">income</option>
-                      <option value="expense">expense</option>
+                      <option value="income">Receita</option>
+                      <option value="expense">Despesa</option>
                     </select>
                   </div>
                   <div className="space-y-1">

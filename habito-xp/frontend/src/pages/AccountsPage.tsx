@@ -32,9 +32,11 @@ export function AccountsPage() {
     },
   });
 
-  if (q.isLoading) return <LoadingState title="Carregando contas…" />;
   if (q.isError) return <ErrorState message={(q.error as Error).message} />;
-  const accounts = q.data!.accounts;
+  const accounts = q.data?.accounts;
+
+  if (!accounts && q.isLoading) return <LoadingState title="Carregando contas…" />;
+  if (!accounts) return <EmptyState title="Nenhuma conta ainda" description="Crie uma conta para começar." />;
 
   return (
     <div className="space-y-6">
