@@ -68,7 +68,7 @@ export function RecurringPage() {
                   {r.type === 'income' ? '+' : '–'}
                 </div>
                   <div className="min-w-0 flex-1">
-                  <div className="font-black text-slate-900 truncate">{r.description || 'Recorrência'}</div>
+                  <div className="font-black text-slate-900 break-words leading-snug">{r.description || 'Recorrência'}</div>
                   <div className="text-sm text-slate-500 font-semibold">
                     {frequencyLabel(r.frequency)} • próxima: {formatDateISO(r.next_run_date)}
                   </div>
@@ -89,9 +89,9 @@ export function RecurringPage() {
       {open ? (
         <div className="fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/40" onClick={() => { setOpen(false); setEditing(null); }} />
-          <div className="absolute right-0 top-0 h-full w-full max-w-[520px] bg-white shadow-2xl">
+          <div className="absolute right-0 top-0 h-full w-full max-w-[95vw] bg-white shadow-2xl overflow-hidden flex flex-col">
             <div className="h-2 bg-emerald-500" />
-            <div className="p-6">
+            <div className="p-6 flex-1 overflow-y-auto">
               <div className="text-xl font-black text-slate-900">{editing ? 'Editar recorrência' : 'Nova recorrência'}</div>
               {save.isError ? <div className="mt-4"><ErrorState message={(save.error as Error).message} /></div> : null}
               <form

@@ -128,7 +128,7 @@ export function AppLayout() {
                   Menu
                 </button>
 
-                <div className="min-w-0">
+                <div className="min-w-0 hidden md:block">
                   <div className="text-sm font-semibold text-slate-500 truncate">
                     Olá{user?.name ? `, ${user.name}` : ''}
                   </div>

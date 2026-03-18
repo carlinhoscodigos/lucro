@@ -293,8 +293,8 @@ export function DashboardPage() {
             {isInitialLoad ? (
               <LoadingState title="Carregando categorias…" />
             ) : expensesByCat.length ? (
-              <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-                <div className="relative w-full md:w-[240px] h-[220px] md:h-[280px] flex items-center justify-center flex-shrink-0">
+              <div className="flex flex-col gap-4 items-center">
+                <div className="relative w-full sm:w-[240px] h-[220px] md:h-[260px] flex items-center justify-center flex-shrink-0">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -335,7 +335,7 @@ export function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="w-full md:flex-1 space-y-2">
+                <div className="w-full space-y-2">
                   {expensesDonutRows.map((e, idx) => (
                     <div key={idx} className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 min-w-0">

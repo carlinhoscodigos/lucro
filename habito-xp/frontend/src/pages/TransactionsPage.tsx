@@ -29,6 +29,14 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   );
 }
 
+function statusLabel(status?: string | null) {
+  if (!status) return '—';
+  if (status === 'completed') return 'Concluído';
+  if (status === 'pending') return 'Pendente';
+  if (status === 'canceled') return 'Cancelado';
+  return status;
+}
+
 export function TransactionsPage() {
   const [sp, setSp] = useSearchParams();
   const qc = useQueryClient();
@@ -171,50 +179,124 @@ export function TransactionsPage() {
 
       <Card className="overflow-hidden">
         {data.transactions.length ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-slate-50 text-slate-600 text-xs font-bold">
-                <tr>
-                  <th className="text-left px-5 py-3">Data</th>
-                  <th className="text-left px-5 py-3">Descrição</th>
-                  <th className="text-left px-5 py-3">Conta</th>
-                  <th className="text-left px-5 py-3">Categoria</th>
-                  <th className="text-left px-5 py-3">Status</th>
-                  <th className="text-right px-5 py-3">Valor</th>
-                  <th className="px-5 py-3" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {data.transactions.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-50/60">
-                    <td className="px-5 py-4 text-sm font-semibold text-slate-700">{formatDateISO(t.transaction_date)}</td>
-                    <td className="px-5 py-4 text-sm font-semibold text-slate-900">{t.description || 'Sem descrição'}</td>
-                    <td className="px-5 py-4 text-sm font-semibold text-slate-700">{t.account_name || t.account_id}</td>
-                    <td className="px-5 py-4 text-sm font-semibold text-slate-700">{t.category_name || '—'}</td>
-                    <td className="px-5 py-4 text-sm font-semibold text-slate-700">{t.status}</td>
-                    <td className={`px-5 py-4 text-right text-sm font-black ${t.type === 'income' ? 'text-emerald-700' : 'text-rose-700'}`}>
-                      {formatMoney(t.amount)}
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="secondary" size="sm" onClick={() => setEditing(t)}>
-                          Editar
-                        </Button>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => del.mutate(t.id)}
-                          disabled={del.isPending}
-                        >
-                          Excluir
-                        </Button>
-                      </div>
-                    </td>
+          <>
+            {/* Desktop */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-slate-50 text-slate-600 text-xs font-bold">
+                  <tr>
+                    <th className="text-left px-5 py-3">Data</th>
+                    <th className="text-left px-5 py-3">Descrição</th>
+                    <th className="text-left px-5 py-3">Conta</th>
+                    <th className="text-left px-5 py-3">Categoria</th>
+                    <th className="text-left px-5 py-3">Status</th>
+                    <th className="text-right px-5 py-3">Valor</th>
+                    <th className="px-5 py-3" />
                   </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {data.transactions.map((t) => (
+                    <tr key={t.id} className="hover:bg-slate-50/60">
+                      <td className="px-5 py-4 text-sm font-semibold text-slate-700">{formatDateISO(t.transaction_date)}</td>
+                      <td className="px-5 py-4 text-sm font-semibold text-slate-900">{t.description || 'Sem descrição'}</td>
+                      <td className="px-5 py-4 text-sm font-semibold text-slate-700">{t.account_name || t.account_id}</td>
+                      <td className="px-5 py-4 text-sm font-semibold text-slate-700">{t.category_name || '—'}</td>
+                      <td className="px-5 py-4 text-sm font-semibold text-slate-700">{statusLabel(t.status)}</td>
+                      <td
+                        className={`px-5 py-4 text-right text-sm font-black ${
+                          t.type === 'income' ? 'text-emerald-700' : 'text-rose-700'
+                        }`}
+                      >
+                        {formatMoney(t.amount)}
+                      </td>
+                      <td className="px-5 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button variant="secondary" size="sm" onClick={() => setEditing(t)}>
+                            Editar
+                          </Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => del.mutate(t.id)}
+                            disabled={del.isPending}
+                          >
+                            Excluir
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile (RTL + wrap) */}
+            <div className="md:hidden">
+              <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
+                <div className="flex flex-row-reverse flex-wrap gap-x-4 gap-y-2 text-[11px] font-bold text-slate-600">
+                  <div className="min-w-[110px] text-right">Data</div>
+                  <div className="min-w-[150px] text-right">Descrição</div>
+                  <div className="min-w-[120px] text-right">Conta</div>
+                  <div className="min-w-[120px] text-right">Categoria</div>
+                  <div className="min-w-[110px] text-right">Status</div>
+                  <div className="min-w-[110px] text-right">Valor</div>
+                </div>
+              </div>
+
+              <div className="divide-y divide-slate-100">
+                {data.transactions.map((t) => (
+                  <div key={t.id} className="px-4 py-4">
+                    <div className="flex flex-row-reverse flex-wrap gap-x-4 gap-y-2">
+                      <div className="min-w-[110px] text-right">
+                        <div className="text-[11px] font-bold text-slate-500">Data</div>
+                        <div className="text-sm font-semibold text-slate-700">{formatDateISO(t.transaction_date)}</div>
+                      </div>
+                      <div className="min-w-[150px] text-right">
+                        <div className="text-[11px] font-bold text-slate-500">Descrição</div>
+                        <div className="text-sm font-semibold text-slate-900 break-words">{t.description || 'Sem descrição'}</div>
+                      </div>
+                      <div className="min-w-[120px] text-right">
+                        <div className="text-[11px] font-bold text-slate-500">Conta</div>
+                        <div className="text-sm font-semibold text-slate-700">{t.account_name || t.account_id}</div>
+                      </div>
+                      <div className="min-w-[120px] text-right">
+                        <div className="text-[11px] font-bold text-slate-500">Categoria</div>
+                        <div className="text-sm font-semibold text-slate-700">{t.category_name || '—'}</div>
+                      </div>
+                      <div className="min-w-[110px] text-right">
+                        <div className="text-[11px] font-bold text-slate-500">Status</div>
+                        <div className="text-sm font-semibold text-slate-700">{statusLabel(t.status)}</div>
+                      </div>
+                      <div className="min-w-[110px] text-right">
+                        <div className="text-[11px] font-bold text-slate-500">Valor</div>
+                        <div
+                          className={`text-sm font-black ${
+                            t.type === 'income' ? 'text-emerald-700' : 'text-rose-700'
+                          }`}
+                        >
+                          {formatMoney(t.amount)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-end gap-2">
+                      <Button variant="secondary" size="sm" onClick={() => setEditing(t)}>
+                        Editar
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => del.mutate(t.id)}
+                        disabled={del.isPending}
+                      >
+                        Excluir
+                      </Button>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            </div>
+          </>
         ) : (
           <div className="p-6">
             <EmptyState
@@ -229,9 +311,9 @@ export function TransactionsPage() {
       {showForm ? (
         <div className="fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/40" onClick={() => { setEditing(null); sp.delete('new'); setSp(sp, { replace: true }); }} />
-          <div className="absolute right-0 top-0 h-full w-full max-w-[520px] bg-white shadow-2xl">
+          <div className="absolute right-0 top-0 h-full w-full max-w-[95vw] bg-white shadow-2xl overflow-hidden flex flex-col">
             <div className="h-2 bg-emerald-500" />
-            <div className="p-6">
+            <div className="p-6 flex-1 overflow-y-auto">
               <div className="text-xl font-black text-slate-900">{editing ? 'Editar lançamento' : 'Novo lançamento'}</div>
               <div className="text-sm text-slate-500 font-medium mt-1">Poucos cliques, foco em produtividade.</div>
 

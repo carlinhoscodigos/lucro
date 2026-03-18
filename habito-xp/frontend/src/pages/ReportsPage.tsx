@@ -64,13 +64,13 @@ export function ReportsPage() {
         </Button>
       </div>
 
-      <Card className="p-5">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
-          <div>
+      <Card className="p-5 overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end min-w-0">
+          <div className="min-w-0">
             <div className="text-xs font-bold text-slate-600 ml-1">De</div>
             <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="text-xs font-bold text-slate-600 ml-1">Até</div>
             <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold" />
           </div>
