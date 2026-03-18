@@ -172,21 +172,23 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <div className="w-full md:w-[320px] md:flex-shrink-0">
+        <Card className="w-full md:w-[320px] md:flex-shrink-0 min-h-[96px] flex flex-col justify-center px-6 py-4">
           <div className="text-xs font-bold text-slate-400 ml-1">Conta</div>
-          <Select
-            value={accountId ?? 'all'}
-            onChange={(e) => setAccountId(e.target.value === 'all' ? null : e.target.value)}
-            wrapperClassName="bg-white/90 rounded-2xl"
-          >
-            <option value="all">Total</option>
-            {(qAccounts.data?.accounts || []).map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </Select>
-        </div>
+          <div className="mt-2">
+            <Select
+              value={accountId ?? 'all'}
+              onChange={(e) => setAccountId(e.target.value === 'all' ? null : e.target.value)}
+              wrapperClassName="bg-white/90 rounded-2xl"
+            >
+              <option value="all">Total</option>
+              {(qAccounts.data?.accounts || []).map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </Card>
       </div>
 
       <div
