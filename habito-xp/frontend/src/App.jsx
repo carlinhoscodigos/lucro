@@ -1,5 +1,7 @@
-const raw = import.meta.env.VITE_API_URL || '';
+import Login from './components/Login';
 
-fetch(`${API_URL}/health`)
-  .then(res => res.json())
-  .then(data => console.log(data)); 
+function App() {
+  return <Login />;
+}
+
+export default App;
