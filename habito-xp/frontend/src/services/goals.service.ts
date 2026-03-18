@@ -6,6 +6,7 @@ export type Goal = {
   target_amount: string | number;
   current_amount: string | number;
   account_type?: string | null;
+  account_id?: string | null;
   target_date: string | null;
   status: 'active' | 'completed' | 'canceled';
   created_at: string;
@@ -22,6 +23,7 @@ export function createGoal(
     target_date?: string | null;
     status?: Goal['status'];
     account_type?: string | null;
+    account_id?: string | null;
   }
 ) {
   return request<{ goal: Goal }>('/goals', { method: 'POST', body: JSON.stringify(input) });
@@ -36,6 +38,7 @@ export function updateGoal(
     target_date: string | null;
     status: Goal['status'];
     account_type: string | null;
+    account_id: string | null;
   }>
 ) {
   return request<{ goal: Goal }>(`/goals/${id}`, { method: 'PATCH', body: JSON.stringify(input) });

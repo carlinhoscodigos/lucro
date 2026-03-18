@@ -55,7 +55,7 @@ export function GoalsPage() {
   if (q.isError) return <ErrorState message={(q.error as Error).message} />;
   const goals = q.data!.goals;
   const accounts = qAccounts.data?.accounts ?? [];
-  const accountTypes = Array.from(new Set(accounts.map((a) => a.type)));
+  const accountById = new Map(accounts.map((a) => [a.id, a]));
 
   return (
     <div className="space-y-6">
@@ -81,7 +81,7 @@ export function GoalsPage() {
                     <div className="min-w-0 flex-1">
                       <div className="font-black text-slate-900 truncate">{g.name}</div>
                       <div className="text-xs font-semibold text-slate-500 mt-1">
-                        Tipo de conta: {accountTypeLabel(g.account_type)}
+                        Conta: {g.account_id ? accountById.get(g.account_id)?.name || '—' : accountTypeLabel(g.account_type)}
                       </div>
                       <div className="text-sm text-slate-500 font-semibold mt-1">
                         {formatMoney(current)} de {formatMoney(target)} • {p}% • faltam {formatMoney(faltam)}
@@ -124,7 +124,7 @@ export function GoalsPage() {
                     target_amount: Number(fd.get('target_amount')),
                     target_date: String(fd.get('target_date') || '') || null,
                     status: String(fd.get('status') || 'active'),
-                    account_type: String(fd.get('account_type') || '').trim() || null,
+                    account_id: String(fd.get('account_id') || '').trim() || null,
                   });
                 }}
               >
@@ -138,22 +138,22 @@ export function GoalsPage() {
                     <input name="target_amount" type="number" step="0.01" min={0} defaultValue={editing ? Number(editing.target_amount) : ''} required className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold" />
                   </div>
                   <div className="space-y-1">
-                    <div className="text-xs font-bold text-slate-600 ml-1">Tipo de conta</div>
+                    <div className="text-xs font-bold text-slate-600 ml-1">Conta</div>
                     <Select
-                      name="account_type"
-                      key={`goal-account-type-${editing?.account_type || accountTypes[0] || 'checking'}`}
+                      name="account_id"
+                      key={`goal-account-id-${editing?.account_id || accounts[0]?.id || 'none'}`}
                       defaultValue={
-                        editing?.account_type || accountTypes[0] || 'checking'
+                        editing?.account_id || accounts[0]?.id || ''
                       }
                     >
-                      {accountTypes.map((t) => (
-                        <option key={t} value={t}>
-                          {accountTypeLabel(t)}
+                      <option value="" disabled>
+                        Selecione…
+                      </option>
+                      {accounts.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name}
                         </option>
                       ))}
-                      {accountTypes.length === 0 ? (
-                        <option value="checking">{accountTypeLabel('checking')}</option>
-                      ) : null}
                     </Select>
                   </div>
                 </div>

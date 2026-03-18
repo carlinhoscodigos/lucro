@@ -8,10 +8,56 @@ const router = express.Router();
 router.use(requireAuth);
 
 async function syncGoalsProgress(userId) {
-  // Se a meta tiver account_type, calculamos o "current_amount" como:
-  // soma dos saldos iniciais + net (income - expense) de todas as transações concluídas
-  // das contas daquele tipo.
-  // E marcamos como "completed" quando atingir/exceder o target_amount.
+  // Preferimos account_id (conta específica) quando existir.
+  // Se não existir, caímos para account_type (tipo).
+
+  // 1) metas por account_id
+  await pool.query(
+    `
+    UPDATE goals g
+    SET
+      current_amount = computed.current_amount,
+      status = CASE
+        WHEN g.status = 'canceled' THEN 'canceled'
+        WHEN computed.current_amount >= g.target_amount THEN 'completed'
+        ELSE g.status
+      END
+    FROM (
+      SELECT
+        g2.id AS goal_id,
+        (
+          COALESCE(a.initial_balance, 0)
+          + COALESCE(
+              SUM(
+                CASE
+                  WHEN t.type = 'income' THEN COALESCE(t.amount, 0)
+                  ELSE -COALESCE(t.amount, 0)
+                END
+              ),
+              0
+            )
+        )::numeric AS current_amount
+      FROM goals g2
+      LEFT JOIN accounts a
+        ON a.user_id = $1
+       AND a.id = g2.account_id
+      LEFT JOIN transactions t
+        ON t.user_id = $1
+       AND t.account_id = g2.account_id
+       AND t.status <> 'canceled'
+       AND t.transaction_date <= CURRENT_DATE
+      WHERE g2.user_id = $1
+        AND g2.account_id IS NOT NULL
+      GROUP BY g2.id, a.initial_balance
+    ) computed
+    WHERE g.id = computed.goal_id
+      AND g.user_id = $1
+      AND g.account_id IS NOT NULL
+    `,
+    [userId]
+  );
+
+  // 2) metas por account_type (fallback)
   await pool.query(
     `
     UPDATE goals g
@@ -48,11 +94,13 @@ async function syncGoalsProgress(userId) {
        AND t.transaction_date <= CURRENT_DATE
       WHERE g2.user_id = $1
         AND g2.account_type IS NOT NULL
+        AND g2.account_id IS NULL
       GROUP BY g2.id
     ) computed
     WHERE g.id = computed.goal_id
       AND g.user_id = $1
       AND g.account_type IS NOT NULL
+      AND g.account_id IS NULL
     `,
     [userId]
   );
@@ -79,6 +127,7 @@ router.get('/', async (req, res) => {
       user_id,
       name,
       account_type,
+      account_id,
       target_amount,
       current_amount,
       target_date,
@@ -97,13 +146,13 @@ router.post('/', async (req, res) => {
   if (missing.length) return res.status(400).json({ error: 'validation', missing });
 
   const userId = req.user.sub;
-  const { name, target_amount, current_amount = 0, target_date = null, status = 'active', account_type = null } = req.body;
+  const { name, target_amount, current_amount = 0, target_date = null, status = 'active', account_type = null, account_id = null } = req.body;
 
   const { rows } = await pool.query(
-    `INSERT INTO goals (user_id, name, target_amount, current_amount, target_date, status, account_type)
-     VALUES ($1,$2,$3,$4,$5,$6,$7)
-     RETURNING id, user_id, name, account_type, target_amount, current_amount, target_date, status, created_at`,
-    [userId, name, target_amount, current_amount, target_date, status, account_type]
+    `INSERT INTO goals (user_id, name, target_amount, current_amount, target_date, status, account_type, account_id)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+     RETURNING id, user_id, name, account_type, account_id, target_amount, current_amount, target_date, status, created_at`,
+    [userId, name, target_amount, current_amount, target_date, status, account_type, account_id]
   );
 
   // Se account_type foi passado, sincroniza current_amount/status para ficar automático.
@@ -119,7 +168,7 @@ router.post('/', async (req, res) => {
 router.patch('/:id', async (req, res) => {
   const userId = req.user.sub;
   const { id } = req.params;
-  const { name, target_amount, current_amount, target_date, status, account_type } = req.body;
+  const { name, target_amount, current_amount, target_date, status, account_type, account_id } = req.body;
 
   const { rows } = await pool.query(
     `UPDATE goals
@@ -129,10 +178,11 @@ router.patch('/:id', async (req, res) => {
        current_amount = COALESCE($5, current_amount),
        target_date = COALESCE($6, target_date),
        status = COALESCE($7, status),
-       account_type = COALESCE($8, account_type)
+       account_type = COALESCE($8, account_type),
+       account_id = COALESCE($9, account_id)
      WHERE id = $1 AND user_id = $2
-     RETURNING id, user_id, name, account_type, target_amount, current_amount, target_date, status, created_at`,
-    [id, userId, name, target_amount, current_amount, target_date, status, account_type]
+     RETURNING id, user_id, name, account_type, account_id, target_amount, current_amount, target_date, status, created_at`,
+    [id, userId, name, target_amount, current_amount, target_date, status, account_type, account_id]
   );
 
   const updated = rows[0];
