@@ -14,6 +14,15 @@ export function clearToken() {
   localStorage.removeItem('token');
 }
 
+function safeErrorMessageByStatus(status: number) {
+  if (status === 401) return 'Sessão inválida. Faça login novamente.';
+  if (status === 403) return 'Você não tem permissão para realizar esta ação.';
+  if (status === 404) return 'Recurso não encontrado.';
+  if (status === 429) return 'Muitas tentativas. Tente novamente mais tarde.';
+  if (status >= 500) return 'Não foi possível concluir a ação.';
+  return 'Não foi possível concluir a ação.';
+}
+
 export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!API_URL) throw new Error('VITE_API_URL não definido');
 
@@ -32,11 +41,16 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
   if (res.status === 204) return undefined as T;
 
   const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
+  let data: unknown = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = null;
+  }
 
   if (!res.ok) {
-    const err = (data ?? { error: 'unknown', message: 'Erro desconhecido' }) as ApiError;
-    const message = err.message || err.error || 'Erro';
+    const err = (data ?? { error: 'unknown', message: safeErrorMessageByStatus(res.status) }) as ApiError;
+    const message = safeErrorMessageByStatus(res.status);
     const e = new Error(message);
     // @ts-expect-error attach
     e.status = res.status;

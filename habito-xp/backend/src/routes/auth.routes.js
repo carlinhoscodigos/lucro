@@ -3,10 +3,14 @@ import bcrypt from 'bcryptjs';
 import pool from '../db.js';
 import { signToken, requireAuth } from '../auth.js';
 import { requireBodyFields } from '../utils.js';
+import { z } from 'zod';
 
 const router = express.Router();
 const AUTH_DEBUG = String(process.env.AUTH_DEBUG || '').toLowerCase() === 'true';
-const AUTH_AUTO_REGISTER = String(process.env.AUTH_AUTO_REGISTER || 'false').toLowerCase() === 'true';
+const loginSchema = z.object({
+  email: z.string().trim().email(),
+  password: z.string().min(6).max(256),
+});
 
 function maskEmail(email) {
   const e = String(email || '');
@@ -15,18 +19,6 @@ function maskEmail(email) {
   if (!local) return `***@${domain}`;
   if (local.length <= 2) return `${local[0] || '*'}***@${domain}`;
   return `${local.slice(0, 2)}***@${domain}`;
-}
-
-function guessNameFromEmail(email) {
-  const local = String(email || '').split('@')[0] || 'Usuário';
-  const cleaned = local.replace(/[._-]+/g, ' ').trim();
-  if (!cleaned) return 'Usuário';
-  return cleaned
-    .split(' ')
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ')
-    .slice(0, 150);
 }
 
 router.get('/login', (_req, res) => {
@@ -80,8 +72,13 @@ router.post('/login', async (req, res) => {
     const missing = requireBodyFields(req.body, ['email', 'password']);
     if (missing.length) return res.status(400).json({ error: 'validation', missing });
 
-    const rawEmail = String(req.body.email || '');
-    const rawPassword = String(req.body.password || '');
+    const valid = loginSchema.safeParse(req.body);
+    if (!valid.success) {
+      return res.status(400).json({ error: 'validation', message: 'Payload inválido' });
+    }
+
+    const rawEmail = valid.data.email;
+    const rawPassword = valid.data.password;
     const email = rawEmail.trim().toLowerCase();
     const password = rawPassword;
     const masked = maskEmail(email);
@@ -99,55 +96,10 @@ router.post('/login', async (req, res) => {
       [email]
     );
 
-    let user = rows[0];
+    const user = rows[0];
     if (!user) {
       if (AUTH_DEBUG) console.log('[AUTH_DEBUG] login:fail_user_not_found', { email: masked });
-
-      if (!AUTH_AUTO_REGISTER) {
-        return res.status(401).json({ error: 'invalid_credentials', message: 'Credenciais inválidas' });
-      }
-
-      // Auto cadastro local no primeiro login (útil quando o usuário existe no Clerk
-      // mas ainda não foi provisionado na tabela users desta API).
-      const passwordHash = await bcrypt.hash(password, 10);
-      const guessedName = guessNameFromEmail(email);
-
-      try {
-        const created = await pool.query(
-          `INSERT INTO users (email, name, password_hash, plan, is_active, role)
-           VALUES ($1, $2, $3, 'free', true, 'user')
-           RETURNING id, email, name, password_hash, is_active, plan, role`,
-          [email, guessedName, passwordHash]
-        );
-        user = created.rows[0];
-        if (AUTH_DEBUG) {
-          console.log('[AUTH_DEBUG] login:auto_register_created', {
-            userId: user.id,
-            email: masked,
-          });
-        }
-      } catch (err) {
-        // Se outra requisição criou ao mesmo tempo, buscamos de novo.
-        if (err?.code === '23505') {
-          const retry = await pool.query(
-            'SELECT id, email, name, password_hash, is_active, plan, role FROM users WHERE lower(email) = $1 LIMIT 1',
-            [email]
-          );
-          user = retry.rows[0];
-          if (AUTH_DEBUG) {
-            console.log('[AUTH_DEBUG] login:auto_register_race_retry', {
-              found: Boolean(user),
-              email: masked,
-            });
-          }
-        } else {
-          throw err;
-        }
-      }
-
-      if (!user) {
-        return res.status(401).json({ error: 'invalid_credentials', message: 'Credenciais inválidas' });
-      }
+      return res.status(401).json({ error: 'invalid_credentials', message: 'Credenciais inválidas' });
     }
     if (!user.is_active) {
       if (AUTH_DEBUG) console.log('[AUTH_DEBUG] login:fail_user_inactive', { userId: user.id, email: masked });

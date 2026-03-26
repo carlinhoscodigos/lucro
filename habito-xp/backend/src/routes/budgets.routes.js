@@ -3,9 +3,17 @@ import pool from '../db.js';
 import { requireAuth } from '../auth.js';
 import { requireBodyFields } from '../utils.js';
 import { processRecurringTransactions } from '../recurringProcessor.js';
+import { ensureCategoryOwnership } from '../security/ownership.js';
+import { z } from 'zod';
 
 const router = express.Router();
 router.use(requireAuth);
+const budgetSchema = z.object({
+  category_id: z.string().uuid(),
+  month: z.coerce.number().int().min(1).max(12),
+  year: z.coerce.number().int().min(2020).max(2100),
+  limit_amount: z.coerce.number().min(0),
+});
 
 router.get('/', async (req, res) => {
   const userId = req.user.sub;
@@ -56,7 +64,13 @@ router.post('/', async (req, res) => {
   if (missing.length) return res.status(400).json({ error: 'validation', missing });
 
   const userId = req.user.sub;
-  const { category_id, month, year, limit_amount } = req.body;
+  const valid = budgetSchema.safeParse(req.body);
+  if (!valid.success) return res.status(400).json({ error: 'validation', message: 'Payload inválido' });
+  const { category_id, month, year, limit_amount } = valid.data;
+
+  if (!(await ensureCategoryOwnership(userId, category_id))) {
+    return res.status(403).json({ error: 'forbidden', message: 'Categoria inválida para este usuário' });
+  }
 
   const { rows } = await pool.query(
     `INSERT INTO budgets (user_id, category_id, month, year, limit_amount)
@@ -72,6 +86,10 @@ router.patch('/:id', async (req, res) => {
   const userId = req.user.sub;
   const { id } = req.params;
   const { limit_amount, month, year, category_id } = req.body;
+
+  if (category_id && !(await ensureCategoryOwnership(userId, category_id))) {
+    return res.status(403).json({ error: 'forbidden', message: 'Categoria inválida para este usuário' });
+  }
 
   const { rows } = await pool.query(
     `UPDATE budgets

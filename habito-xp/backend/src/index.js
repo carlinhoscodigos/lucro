@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth.routes.js';
 import accountsRoutes from './routes/accounts.routes.js';
 import categoriesRoutes from './routes/categories.routes.js';
@@ -15,19 +17,24 @@ import usersRoutes from './routes/users.routes.js';
 
 const app = express();
 
-const allowedOrigins = new Set([
+const defaultOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:5175',
   'https://lucro-theta.vercel.app',
-]);
+];
+const extraOrigins = String(process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+const allowedOrigins = new Set([...defaultOrigins, ...extraOrigins]);
 
 const corsOptions = {
   origin(origin, callback) {
     // Permite requests server-to-server / curl (sem origin)
     if (!origin) return callback(null, true);
     if (allowedOrigins.has(origin)) return callback(null, true);
-    return callback(new Error(`CORS bloqueado para origem: ${origin}`));
+    return callback(new Error('CORS bloqueado para origem não autorizada'));
   },
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -35,10 +42,29 @@ const corsOptions = {
   maxAge: 86400,
 };
 
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    frameguard: { action: 'deny' },
+    referrerPolicy: { policy: 'no-referrer' },
+    noSniff: true,
+  })
+);
+
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
-app.use(express.json());
+app.use(express.json({ limit: '256kb' }));
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'too_many_requests', message: 'Muitas tentativas. Tente novamente mais tarde.' },
+});
+app.use('/auth/login', loginLimiter);
 
 app.get('/', (req, res) => {
   res.send('API online');

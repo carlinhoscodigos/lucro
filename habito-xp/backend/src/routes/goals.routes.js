@@ -3,9 +3,20 @@ import pool from '../db.js';
 import { requireAuth } from '../auth.js';
 import { requireBodyFields } from '../utils.js';
 import { processRecurringTransactions } from '../recurringProcessor.js';
+import { ensureAccountOwnership } from '../security/ownership.js';
+import { z } from 'zod';
 
 const router = express.Router();
 router.use(requireAuth);
+const createGoalSchema = z.object({
+  name: z.string().trim().min(1).max(150),
+  target_amount: z.coerce.number().positive(),
+  current_amount: z.coerce.number().min(0).optional(),
+  target_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  status: z.enum(['active', 'completed', 'canceled']).optional(),
+  account_type: z.string().max(30).nullable().optional(),
+  account_id: z.string().uuid().nullable().optional(),
+});
 
 async function syncGoalsProgress(userId) {
   // Preferimos account_id (conta específica) quando existir.
@@ -146,7 +157,13 @@ router.post('/', async (req, res) => {
   if (missing.length) return res.status(400).json({ error: 'validation', missing });
 
   const userId = req.user.sub;
-  const { name, target_amount, current_amount = 0, target_date = null, status = 'active', account_type = null, account_id = null } = req.body;
+  const valid = createGoalSchema.safeParse(req.body);
+  if (!valid.success) return res.status(400).json({ error: 'validation', message: 'Payload inválido' });
+  const { name, target_amount, current_amount = 0, target_date = null, status = 'active', account_type = null, account_id = null } = valid.data;
+
+  if (!(await ensureAccountOwnership(userId, account_id))) {
+    return res.status(403).json({ error: 'forbidden', message: 'Conta inválida para este usuário' });
+  }
 
   const { rows } = await pool.query(
     `INSERT INTO goals (user_id, name, target_amount, current_amount, target_date, status, account_type, account_id)
@@ -169,6 +186,10 @@ router.patch('/:id', async (req, res) => {
   const userId = req.user.sub;
   const { id } = req.params;
   const { name, target_amount, current_amount, target_date, status, account_type, account_id } = req.body;
+
+  if (account_id && !(await ensureAccountOwnership(userId, account_id))) {
+    return res.status(403).json({ error: 'forbidden', message: 'Conta inválida para este usuário' });
+  }
 
   const existing = await pool.query(
     'SELECT target_date FROM goals WHERE id = $1 AND user_id = $2 LIMIT 1',

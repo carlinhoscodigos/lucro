@@ -41,6 +41,8 @@ Registo de pedidos e tarefas. Cada item fica com um check-in: quando for feito, 
 - [x] Alertas no dashboard baseados em percentual de gastos sobre renda/salário mensal
 - [x] Landing page pública em `/` + rotas `/login` e `/register` separadas, mantendo `/app/*` protegido
 - [x] Ajuste: remover cadastro público e manter criação de usuário apenas no painel admin
+- [x] Landing page refatorada (navbar funcional, hero com preview, benefícios/recursos/como funciona e CTA com WhatsApp)
+- [x] Hardening de segurança para beta pago: remover seed admin inseguro, desativar auto-register, adicionar rate limit no login, helmet/CORS, ownership checks, validação base com zod e sanitização de erros no frontend
 
 ---
 
@@ -60,7 +62,9 @@ Para criar as tabelas no Postgres: `cd backend` e `npm run migrate`.
 
 1. Backend
    - Crie `backend/.env` com `DATABASE_URL`, `PORT` e `JWT_SECRET`
+   - Defina `ALLOWED_ORIGINS` com as origens permitidas em produção
    - No diretório `backend`, rode as migrações: `npm run migrate`
+   - Para provisionar admin de forma segura (sem senha em repositório): defina `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` e rode `npm run provision:admin`
    - Inicie o backend: `npm start`
 2. Frontend
    - Ajuste `frontend/.env` com `VITE_API_URL` apontando para seu backend

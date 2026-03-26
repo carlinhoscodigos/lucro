@@ -2,9 +2,17 @@ import express from 'express';
 import pool from '../db.js';
 import { requireAuth } from '../auth.js';
 import { requireBodyFields } from '../utils.js';
+import { z } from 'zod';
 
 const router = express.Router();
 router.use(requireAuth);
+const categorySchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  type: z.enum(['income', 'expense']),
+  color: z.string().max(20).nullable().optional(),
+  icon: z.string().max(50).nullable().optional(),
+  is_default: z.boolean().optional(),
+});
 
 router.get('/', async (req, res) => {
   const userId = req.user.sub;
@@ -29,7 +37,9 @@ router.post('/', async (req, res) => {
   const missing = requireBodyFields(req.body, ['name', 'type']);
   if (missing.length) return res.status(400).json({ error: 'validation', missing });
   const userId = req.user.sub;
-  const { name, type, color = null, icon = null, is_default = false } = req.body;
+  const valid = categorySchema.safeParse(req.body);
+  if (!valid.success) return res.status(400).json({ error: 'validation', message: 'Payload inválido' });
+  const { name, type, color = null, icon = null, is_default = false } = valid.data;
   const { rows } = await pool.query(
     `INSERT INTO categories (user_id, name, type, color, icon, is_default)
      VALUES ($1, $2, $3, $4, $5, $6)

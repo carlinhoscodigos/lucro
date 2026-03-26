@@ -3,9 +3,25 @@ import pool from '../db.js';
 import { requireAuth } from '../auth.js';
 import { requireBodyFields } from '../utils.js';
 import { processRecurringTransactions, calculateNextRunDateISO } from '../recurringProcessor.js';
+import { ensureAccountOwnership, ensureCategoryOwnership, ensureRecurringOwnership } from '../security/ownership.js';
+import { z } from 'zod';
 
 const router = express.Router();
 router.use(requireAuth);
+const createTxSchema = z.object({
+  type: z.enum(['income', 'expense']),
+  amount: z.coerce.number().positive(),
+  account_id: z.string().uuid(),
+  transaction_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  status: z.enum(['pending', 'completed', 'canceled']),
+  description: z.string().max(255).optional().nullable(),
+  category_id: z.string().uuid().optional().nullable(),
+  is_recurring: z.boolean().optional(),
+  recurring_id: z.string().uuid().optional().nullable(),
+  frequency: z.enum(['daily', 'weekly', 'monthly', 'yearly']).optional().nullable(),
+  day_of_month: z.coerce.number().int().min(1).max(31).optional().nullable(),
+  next_run_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+});
 
 function buildFilters(query) {
   const where = [];
@@ -113,6 +129,8 @@ router.post('/', async (req, res) => {
   if (missing.length) return res.status(400).json({ error: 'validation', missing });
 
   const userId = req.user.sub;
+  const valid = createTxSchema.safeParse(req.body);
+  if (!valid.success) return res.status(400).json({ error: 'validation', message: 'Payload inválido' });
   const {
     type,
     amount,
@@ -126,7 +144,17 @@ router.post('/', async (req, res) => {
     frequency = null,
     day_of_month = null,
     next_run_date = null,
-  } = req.body;
+  } = valid.data;
+
+  if (!(await ensureAccountOwnership(userId, account_id))) {
+    return res.status(403).json({ error: 'forbidden', message: 'Conta inválida para este usuário' });
+  }
+  if (!(await ensureCategoryOwnership(userId, category_id))) {
+    return res.status(403).json({ error: 'forbidden', message: 'Categoria inválida para este usuário' });
+  }
+  if (!(await ensureRecurringOwnership(userId, recurring_id))) {
+    return res.status(403).json({ error: 'forbidden', message: 'Recorrência inválida para este usuário' });
+  }
 
   // Se o usuário marcou "Recorrente" sem fornecer recurring_id, criamos a regra automaticamente.
   if (is_recurring && (!recurring_id || String(recurring_id) === 'null')) {
@@ -216,6 +244,16 @@ router.patch('/:id', async (req, res) => {
     is_recurring,
     recurring_id,
   } = req.body;
+
+  if (account_id && !(await ensureAccountOwnership(userId, account_id))) {
+    return res.status(403).json({ error: 'forbidden', message: 'Conta inválida para este usuário' });
+  }
+  if (category_id && !(await ensureCategoryOwnership(userId, category_id))) {
+    return res.status(403).json({ error: 'forbidden', message: 'Categoria inválida para este usuário' });
+  }
+  if (recurring_id && !(await ensureRecurringOwnership(userId, recurring_id))) {
+    return res.status(403).json({ error: 'forbidden', message: 'Recorrência inválida para este usuário' });
+  }
 
   const { rows } = await pool.query(
     `UPDATE transactions

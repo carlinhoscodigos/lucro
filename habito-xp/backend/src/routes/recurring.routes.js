@@ -2,9 +2,22 @@ import express from 'express';
 import pool from '../db.js';
 import { requireAuth } from '../auth.js';
 import { requireBodyFields } from '../utils.js';
+import { ensureAccountOwnership, ensureCategoryOwnership } from '../security/ownership.js';
+import { z } from 'zod';
 
 const router = express.Router();
 router.use(requireAuth);
+const recurringSchema = z.object({
+  account_id: z.string().uuid(),
+  category_id: z.string().uuid().optional().nullable(),
+  type: z.enum(['income', 'expense']),
+  amount: z.coerce.number().positive(),
+  description: z.string().max(255).optional().nullable(),
+  frequency: z.enum(['daily', 'weekly', 'monthly', 'yearly']),
+  day_of_month: z.coerce.number().int().min(1).max(31).optional().nullable(),
+  next_run_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  is_active: z.boolean().optional(),
+});
 
 router.get('/', async (req, res) => {
   const userId = req.user.sub;
@@ -31,6 +44,8 @@ router.post('/', async (req, res) => {
   if (missing.length) return res.status(400).json({ error: 'validation', missing });
 
   const userId = req.user.sub;
+  const valid = recurringSchema.safeParse(req.body);
+  if (!valid.success) return res.status(400).json({ error: 'validation', message: 'Payload inválido' });
   const {
     account_id,
     category_id = null,
@@ -41,7 +56,14 @@ router.post('/', async (req, res) => {
     day_of_month = null,
     next_run_date,
     is_active = true,
-  } = req.body;
+  } = valid.data;
+
+  if (!(await ensureAccountOwnership(userId, account_id))) {
+    return res.status(403).json({ error: 'forbidden', message: 'Conta inválida para este usuário' });
+  }
+  if (!(await ensureCategoryOwnership(userId, category_id))) {
+    return res.status(403).json({ error: 'forbidden', message: 'Categoria inválida para este usuário' });
+  }
 
   const { rows } = await pool.query(
     `INSERT INTO recurring_transactions
@@ -68,6 +90,13 @@ router.patch('/:id', async (req, res) => {
     next_run_date,
     is_active,
   } = req.body;
+
+  if (account_id && !(await ensureAccountOwnership(userId, account_id))) {
+    return res.status(403).json({ error: 'forbidden', message: 'Conta inválida para este usuário' });
+  }
+  if (category_id && !(await ensureCategoryOwnership(userId, category_id))) {
+    return res.status(403).json({ error: 'forbidden', message: 'Categoria inválida para este usuário' });
+  }
 
   const { rows } = await pool.query(
     `UPDATE recurring_transactions

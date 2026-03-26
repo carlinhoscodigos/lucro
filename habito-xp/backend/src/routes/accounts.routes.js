@@ -2,9 +2,15 @@ import express from 'express';
 import pool from '../db.js';
 import { requireAuth } from '../auth.js';
 import { requireBodyFields } from '../utils.js';
+import { z } from 'zod';
 
 const router = express.Router();
 router.use(requireAuth);
+const accountSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  type: z.enum(['checking', 'savings', 'wallet', 'credit_card', 'investment']),
+  initial_balance: z.coerce.number().optional(),
+});
 
 router.get('/', async (req, res) => {
   const userId = req.user.sub;
@@ -19,7 +25,9 @@ router.post('/', async (req, res) => {
   const missing = requireBodyFields(req.body, ['name', 'type']);
   if (missing.length) return res.status(400).json({ error: 'validation', missing });
   const userId = req.user.sub;
-  const { name, type, initial_balance = 0 } = req.body;
+  const valid = accountSchema.safeParse(req.body);
+  if (!valid.success) return res.status(400).json({ error: 'validation', message: 'Payload inválido' });
+  const { name, type, initial_balance = 0 } = valid.data;
   const { rows } = await pool.query(
     `INSERT INTO accounts (user_id, name, type, initial_balance)
      VALUES ($1, $2, $3, $4)
