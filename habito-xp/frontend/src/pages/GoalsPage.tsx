@@ -56,6 +56,7 @@ export function GoalsPage() {
   const goals = q.data!.goals;
   const accounts = qAccounts.data?.accounts ?? [];
   const accountById = new Map(accounts.map((a) => [a.id, a]));
+  const todayISO = new Date().toISOString().slice(0, 10);
 
   return (
     <div className="space-y-6">
@@ -75,20 +76,26 @@ export function GoalsPage() {
               const target = Number(g.target_amount);
               const p = target ? Math.round((current / target) * 100) : 0;
               const faltam = Math.max(0, target - current);
+              const isExpired = Boolean(g.target_date && String(g.target_date).slice(0, 10) < todayISO);
               return (
-                <div key={g.id} className="px-5 py-4">
+                <div key={g.id} className={`px-5 py-4 ${isExpired ? 'bg-slate-100/80' : ''}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <div className="font-black text-slate-900 truncate">{g.name}</div>
-                      <div className="text-xs font-semibold text-slate-500 mt-1">
+                      <div className={`font-black truncate ${isExpired ? 'text-slate-600' : 'text-slate-900'}`}>{g.name}</div>
+                      <div className={`text-xs font-semibold mt-1 ${isExpired ? 'text-slate-500' : 'text-slate-500'}`}>
                         Conta: {g.account_id ? accountById.get(g.account_id)?.name || '—' : accountTypeLabel(g.account_type)}
                       </div>
-                      <div className="text-sm text-slate-500 font-semibold mt-1">
+                      <div className={`text-sm font-semibold mt-1 ${isExpired ? 'text-slate-500' : 'text-slate-500'}`}>
                         {formatMoney(current)} de {formatMoney(target)} • {p}% • faltam {formatMoney(faltam)}
                       </div>
+                      {isExpired ? (
+                        <div className="text-xs font-bold text-slate-500 mt-1">Prazo expirado (somente exclusão)</div>
+                      ) : null}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="secondary" size="sm" onClick={() => { setEditing(g); setOpen(true); }}>Editar</Button>
+                      {!isExpired ? (
+                        <Button variant="secondary" size="sm" onClick={() => { setEditing(g); setOpen(true); }}>Editar</Button>
+                      ) : null}
                       <Button variant="danger" size="sm" onClick={() => del.mutate(g.id)} disabled={del.isPending}>Excluir</Button>
                     </div>
                   </div>

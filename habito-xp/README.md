@@ -35,6 +35,10 @@ Registo de pedidos e tarefas. Cada item fica com um check-in: quando for feito, 
 - [x] Metas: selecionar “Tipo de conta” e sincronizar progresso automaticamente
 - [x] Remover dependência de Clerk no fluxo e criar painel próprio de cadastro de usuários
 - [x] Controle de `role` (admin/user) e painel de usuários visível apenas para admin
+- [x] Metas: ao passar do prazo ficam cinza e não podem ser editadas (somente excluir)
+- [x] Remover aba "Orçamentos" do menu lateral e rotas do frontend
+- [x] Painel admin: definir data de término no cadastro e excluir contas automaticamente após vencimento
+- [x] Alertas no dashboard baseados em percentual de gastos sobre renda/salário mensal
 
 ---
 

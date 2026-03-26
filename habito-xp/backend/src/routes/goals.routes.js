@@ -170,6 +170,21 @@ router.patch('/:id', async (req, res) => {
   const { id } = req.params;
   const { name, target_amount, current_amount, target_date, status, account_type, account_id } = req.body;
 
+  const existing = await pool.query(
+    'SELECT target_date FROM goals WHERE id = $1 AND user_id = $2 LIMIT 1',
+    [id, userId]
+  );
+  const row = existing.rows[0];
+  if (!row) return res.status(404).json({ error: 'not_found' });
+
+  if (row.target_date) {
+    const todayISO = new Date().toISOString().slice(0, 10);
+    const goalDateISO = String(row.target_date).slice(0, 10);
+    if (goalDateISO < todayISO) {
+      return res.status(409).json({ error: 'goal_expired', message: 'Meta expirada não pode ser editada' });
+    }
+  }
+
   const { rows } = await pool.query(
     `UPDATE goals
      SET

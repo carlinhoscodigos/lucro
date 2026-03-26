@@ -4,7 +4,7 @@ import { Button } from '../components/ui/Button';
 import { logout } from '../services/auth.service';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createUser, listUsers } from '../services/users.service';
+import { changeUserPassword, createUser, deleteUser, listUsers } from '../services/users.service';
 import { ErrorState, LoadingState } from '../components/ui/State';
 
 export function SettingsPage() {
@@ -19,6 +19,16 @@ export function SettingsPage() {
       await qc.invalidateQueries({ queryKey: ['users'] });
     },
   });
+  const del = useMutation({
+    mutationFn: deleteUser,
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+  const changePass = useMutation({
+    mutationFn: ({ id, password }: { id: string; password: string }) => changeUserPassword(id, password),
+  });
+  const todayISO = new Date().toISOString().slice(0, 10);
 
   return (
     <div className="space-y-6">
@@ -87,7 +97,7 @@ export function SettingsPage() {
           <CardBody>
           {create.isError ? <ErrorState message={(create.error as Error).message} /> : null}
           <form
-            className="grid grid-cols-1 md:grid-cols-4 gap-3"
+            className="grid grid-cols-1 md:grid-cols-5 gap-3"
             onSubmit={(e) => {
               e.preventDefault();
               const fd = new FormData(e.currentTarget);
@@ -95,6 +105,7 @@ export function SettingsPage() {
                 name: String(fd.get('name') || ''),
                 email: String(fd.get('email') || ''),
                 password: String(fd.get('password') || ''),
+                expires_on: String(fd.get('expires_on') || todayISO),
                 role: String(fd.get('role') || 'user') as 'admin' | 'user',
               });
               e.currentTarget.reset();
@@ -119,6 +130,17 @@ export function SettingsPage() {
                 <option value="admin">admin</option>
               </select>
             </div>
+            <div className="space-y-1">
+              <div className="text-xs font-bold text-slate-600 ml-1">Data de término</div>
+              <input
+                name="expires_on"
+                type="date"
+                min={todayISO}
+                defaultValue={todayISO}
+                required
+                className="w-full h-11 rounded-2xl border border-slate-100 bg-slate-50 px-4 text-sm font-semibold"
+              />
+            </div>
             <div className="pt-6">
               <Button type="submit" disabled={create.isPending} className="w-full">
                 {create.isPending ? 'Criando…' : 'Criar usuário'}
@@ -141,6 +163,8 @@ export function SettingsPage() {
                       <th className="text-left px-4 py-3">Plano</th>
                       <th className="text-left px-4 py-3">Role</th>
                       <th className="text-left px-4 py-3">Status</th>
+                      <th className="text-left px-4 py-3">Término</th>
+                      <th className="text-right px-4 py-3">Ações</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -151,6 +175,47 @@ export function SettingsPage() {
                         <td className="px-4 py-3 text-sm font-semibold text-slate-700 capitalize">{u.plan || 'free'}</td>
                         <td className="px-4 py-3 text-sm font-semibold text-slate-700">{u.role}</td>
                         <td className="px-4 py-3 text-sm font-semibold text-slate-700">{u.is_active ? 'ativo' : 'inativo'}</td>
+                        <td className="px-4 py-3 text-sm font-semibold text-slate-700">{u.expires_on || '—'}</td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={async () => {
+                                const newPass = window.prompt(`Nova senha para ${u.email}:`);
+                                if (!newPass) return;
+                                if (newPass.length < 6) {
+                                  window.alert('A senha deve ter pelo menos 6 caracteres.');
+                                  return;
+                                }
+                                try {
+                                  await changePass.mutateAsync({ id: u.id, password: newPass });
+                                  window.alert('Senha atualizada com sucesso.');
+                                } catch (err: any) {
+                                  window.alert(err?.message || 'Não foi possível atualizar a senha.');
+                                }
+                              }}
+                            >
+                              Trocar senha
+                            </Button>
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              onClick={async () => {
+                                const ok = window.confirm(`Excluir usuário ${u.email}? Essa ação não pode ser desfeita.`);
+                                if (!ok) return;
+                                try {
+                                  await del.mutateAsync(u.id);
+                                } catch (err: any) {
+                                  window.alert(err?.message || 'Não foi possível excluir o usuário.');
+                                }
+                              }}
+                              disabled={del.isPending}
+                            >
+                              Excluir
+                            </Button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

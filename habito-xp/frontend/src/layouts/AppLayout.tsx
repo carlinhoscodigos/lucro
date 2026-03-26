@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Bell, LayoutDashboard, List, Wallet, Tags, Target, Repeat, BarChart3, Settings, PieChart, Search, Plus } from 'lucide-react';
+import { Bell, LayoutDashboard, List, Wallet, Tags, Target, Repeat, BarChart3, Settings, Search, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { Button } from '../components/ui/Button';
@@ -17,7 +17,6 @@ const nav = [
   { to: '/app/transactions', label: 'Lançamentos', icon: List },
   { to: '/app/accounts', label: 'Contas', icon: Wallet },
   { to: '/app/categories', label: 'Categorias', icon: Tags },
-  { to: '/app/budgets', label: 'Orçamentos', icon: PieChart },
   { to: '/app/goals', label: 'Metas', icon: Target },
   { to: '/app/recurring', label: 'Recorrências', icon: Repeat },
   { to: '/app/reports', label: 'Relatórios', icon: BarChart3 },

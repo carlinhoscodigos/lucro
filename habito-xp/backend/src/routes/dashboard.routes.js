@@ -115,6 +115,53 @@ router.get('/', async (req, res) => {
     accountId ? [userId, from, to, accountId] : [userId, from, to]
   );
 
+  // Base de renda/salário do mês:
+  // 1) tenta categoria "Salário"
+  // 2) fallback para total de receitas do mês
+  const salaryResult = await pool.query(
+    `SELECT COALESCE(SUM(t.amount), 0)::numeric AS salary_income
+     FROM transactions t
+     LEFT JOIN categories c ON c.id = t.category_id
+     WHERE t.user_id = $1
+       AND t.type = 'income'
+       AND t.status <> 'canceled'
+       AND t.transaction_date BETWEEN $2 AND $3
+       AND t.transaction_date <= CURRENT_DATE
+       AND lower(COALESCE(c.name, '')) = 'salário'
+       ${accountId ? ' AND t.account_id = $4' : ''}`,
+    accountId ? [userId, from, to, accountId] : [userId, from, to]
+  );
+
+  const salaryBase = Math.max(
+    Number(salaryResult.rows[0]?.salary_income ?? 0),
+    Number(income_month ?? 0)
+  );
+  const expenseBase = Number(expense_month ?? 0);
+  const alerts = [];
+
+  if (salaryBase > 0) {
+    const ratio = expenseBase / salaryBase;
+    if (ratio >= 1) {
+      alerts.push({
+        title: 'Atenção máxima',
+        message: `Você já gastou ${Math.round(ratio * 100)}% da sua renda do mês.`,
+        level: 'danger',
+      });
+    } else if (ratio >= 0.85) {
+      alerts.push({
+        title: 'Gastos elevados',
+        message: `Suas despesas estão em ${Math.round(ratio * 100)}% da sua renda mensal.`,
+        level: 'warning',
+      });
+    } else if (ratio <= 0.4) {
+      alerts.push({
+        title: 'Boa gestão',
+        message: `Você gastou ${Math.round(ratio * 100)}% da renda mensal até agora.`,
+        level: 'info',
+      });
+    }
+  }
+
   const monthlySeries = await pool.query(
     `SELECT
       to_char(m.month_date, 'YYYY-MM') AS month,
@@ -157,7 +204,7 @@ router.get('/', async (req, res) => {
       expenses_by_category: expensesByCategory.rows,
     },
     last_transactions: lastTx.rows,
-    alerts: [],
+    alerts,
   });
 });
 

@@ -70,6 +70,13 @@ async function ensureDefaultCategories(userId) {
 
 router.post('/login', async (req, res) => {
   try {
+    // Limpeza automática de contas expiradas
+    await pool.query(
+      `DELETE FROM users
+       WHERE expires_on IS NOT NULL
+         AND expires_on < CURRENT_DATE`
+    );
+
     const missing = requireBodyFields(req.body, ['email', 'password']);
     if (missing.length) return res.status(400).json({ error: 'validation', missing });
 
@@ -88,7 +95,7 @@ router.post('/login', async (req, res) => {
     }
 
     const { rows } = await pool.query(
-      'SELECT id, email, name, password_hash, is_active, plan, role FROM users WHERE lower(email) = $1 LIMIT 1',
+      'SELECT id, email, name, password_hash, is_active, plan, role, expires_on FROM users WHERE lower(email) = $1 LIMIT 1',
       [email]
     );
 
@@ -213,7 +220,14 @@ router.post('/login', async (req, res) => {
     }
     return res.json({
       token,
-      user: { id: user.id, email: user.email, name: user.name, plan: user.plan, role: user.role || 'user' },
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        plan: user.plan,
+        role: user.role || 'user',
+        expires_on: user.expires_on ?? null,
+      },
     });
   } catch (err) {
     console.error('Erro no /auth/login:', err);
@@ -229,7 +243,7 @@ router.post('/login', async (req, res) => {
 
 router.get('/me', requireAuth, async (req, res) => {
   const userId = req.user.sub;
-  const { rows } = await pool.query('SELECT id, email, name, plan, role, is_active FROM users WHERE id = $1', [userId]);
+  const { rows } = await pool.query('SELECT id, email, name, plan, role, is_active, expires_on FROM users WHERE id = $1', [userId]);
   const user = rows[0];
   if (!user) return res.status(404).json({ error: 'not_found' });
   return res.json({ user });
