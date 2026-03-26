@@ -153,6 +153,12 @@ router.get('/', async (req, res) => {
         message: `Suas despesas estão em ${Math.round(ratio * 100)}% da sua renda mensal.`,
         level: 'warning',
       });
+    } else if (ratio >= 0.5) {
+      alerts.push({
+        title: 'Alerta de gastos',
+        message: `Você já comprometeu ${Math.round(ratio * 100)}% da renda do mês.`,
+        level: 'warning',
+      });
     } else if (ratio <= 0.4) {
       alerts.push({
         title: 'Boa gestão',

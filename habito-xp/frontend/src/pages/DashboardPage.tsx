@@ -147,8 +147,6 @@ export function DashboardPage() {
 
   const lastTransactions = data?.last_transactions ?? [];
   const alerts = data?.alerts ?? [];
-  const expenseMonthNum = Number(data?.summary?.expense_month ?? 0);
-  const topExpenseName = expensesByCat[0]?.name;
 
   const balanceNum = Number(data?.summary?.balance ?? 0);
   const projectedNum = Number(data?.summary?.projected_balance ?? 0);
@@ -444,20 +442,14 @@ export function DashboardPage() {
                 {alerts.map((a, idx) => (
                   <div key={idx} className="rounded-2xl border border-slate-100 p-3">
                     <div className="font-bold text-slate-900">{a.title}</div>
-                    <div className="text-sm text-slate-500 font-medium mt-1">{a.message}</div>
+                    <div className="text-sm text-slate-900 font-semibold mt-1">{a.message}</div>
                   </div>
                 ))}
               </div>
             ) : (
               <EmptyState
-                title="Tudo sob controle"
-                description={
-                  expenseMonthNum <= 0
-                    ? 'Nenhuma despesa registrada neste mês.'
-                    : topExpenseName
-                      ? `Sua maior despesa atual é ${topExpenseName}.`
-                      : 'Registre uma despesa para ver insights por categoria.'
-                }
+                title="Sem alertas no momento"
+                description="Se seus gastos aumentarem, os alertas aparecem aqui automaticamente."
               />
             )}
           </CardBody>
