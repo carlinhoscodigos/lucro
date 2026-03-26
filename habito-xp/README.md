@@ -39,6 +39,8 @@ Registo de pedidos e tarefas. Cada item fica com um check-in: quando for feito, 
 - [x] Remover aba "Orçamentos" do menu lateral e rotas do frontend
 - [x] Painel admin: definir data de término no cadastro e excluir contas automaticamente após vencimento
 - [x] Alertas no dashboard baseados em percentual de gastos sobre renda/salário mensal
+- [x] Landing page pública em `/` + rotas `/login` e `/register` separadas, mantendo `/app/*` protegido
+- [x] Ajuste: remover cadastro público e manter criação de usuário apenas no painel admin
 
 ---
 

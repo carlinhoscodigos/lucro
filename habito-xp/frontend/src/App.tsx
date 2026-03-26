@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { LoginPage } from './pages/LoginPage';
+import { LandingPage } from './pages/LandingPage';
 import { AppLayout } from './layouts/AppLayout';
 import { DashboardPage } from './pages/DashboardPage';
 import { TransactionsPage } from './pages/TransactionsPage';
@@ -19,14 +20,24 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-export default function App() {
+function PublicOnly({ children }: { children: React.ReactNode }) {
   const { token } = useAuth();
+  if (token) return <Navigate to="/app/dashboard" replace />;
+  return <>{children}</>;
+}
 
+export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to={token ? '/app/dashboard' : '/login'} replace />} />
-      <Route path="/login" element={<LoginPage />} />
-
+      <Route path="/" element={<LandingPage />} />
+      <Route
+        path="/login"
+        element={
+          <PublicOnly>
+            <LoginPage />
+          </PublicOnly>
+        }
+      />
       <Route
         path="/app"
         element={

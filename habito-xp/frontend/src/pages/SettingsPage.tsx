@@ -7,6 +7,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { changeUserPassword, createUser, deleteUser, listUsers } from '../services/users.service';
 import { ErrorState, LoadingState } from '../components/ui/State';
 
+function planLabel(plan?: string | null) {
+  const p = String(plan || '').toLowerCase();
+  if (!p || p === 'free') return 'Normal';
+  return p.charAt(0).toUpperCase() + p.slice(1);
+}
+
 export function SettingsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -63,7 +69,7 @@ export function SettingsPage() {
           <CardBody>
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-slate-900 font-black text-lg capitalize">{user?.plan || 'free'}</div>
+                <div className="text-slate-900 font-black text-lg">{planLabel(user?.plan)}</div>
                 <div className="text-slate-500 text-sm font-medium mt-1">Pronto para upgrade quando quiser.</div>
               </div>
               <Button variant="secondary">Gerenciar</Button>
@@ -172,7 +178,7 @@ export function SettingsPage() {
                       <tr key={u.id}>
                         <td className="px-4 py-3 text-sm font-semibold text-slate-900">{u.name}</td>
                         <td className="px-4 py-3 text-sm font-semibold text-slate-700">{u.email}</td>
-                        <td className="px-4 py-3 text-sm font-semibold text-slate-700 capitalize">{u.plan || 'free'}</td>
+                        <td className="px-4 py-3 text-sm font-semibold text-slate-700">{planLabel(u.plan)}</td>
                         <td className="px-4 py-3 text-sm font-semibold text-slate-700">{u.role}</td>
                         <td className="px-4 py-3 text-sm font-semibold text-slate-700">{u.is_active ? 'ativo' : 'inativo'}</td>
                         <td className="px-4 py-3 text-sm font-semibold text-slate-700">{u.expires_on || '—'}</td>
